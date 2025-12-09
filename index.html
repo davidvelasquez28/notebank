@@ -241,7 +241,8 @@
       padding-right: 2px;
     }
 
-    /* month/day collapsible styling */
+    /* Collapsible month/day blocks */
+
     details.month-block {
       border-radius: 10px;
       border: 1px solid rgba(31, 41, 55, 0.9);
@@ -401,7 +402,7 @@
     </header>
 
     <main class="layout">
-      <!-- Left: input / composer -->
+      <!-- LEFT PANEL: new + past notes -->
       <section class="panel panel-left">
         <h2>New note</h2>
 
@@ -443,7 +444,7 @@
         <div class="controls">
           <button id="saveButton">Save note</button>
           <div class="hint">
-            Saved with date &amp; time · Shortcut:
+            Uses current time · Shortcut:
             <span class="kbd">Ctrl</span> +
             <span class="kbd">Enter</span>
             /
@@ -452,48 +453,48 @@
           </div>
         </div>
 
+        <!-- PAST NOTE SECTION -->
         <hr style="margin: 14px 0; border: none; border-top: 1px solid rgba(51,65,85,0.8);" />
 
-<h2 style="font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.07em; color: #9ca3af; margin: 0 0 4px;">
-  Add past note
-</h2>
+        <h2 style="font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.07em; color: #9ca3af; margin: 0 0 4px;">
+          Add past note
+        </h2>
 
-<label for="pastNoteInput">Note</label>
-<textarea
-  id="pastNoteInput"
-  placeholder="Paste an old note here..."
-></textarea>
+        <label for="pastNoteInput">Note</label>
+        <textarea
+          id="pastNoteInput"
+          placeholder="Paste an old note here..."
+        ></textarea>
 
-<label for="pastNoteTime" style="margin-top: 6px;">Timestamp (past)</label>
-<input
-  id="pastNoteTime"
-  type="datetime-local"
-  style="
-    width: 100%;
-    padding: 8px 10px;
-    border-radius: 10px;
-    border: 1px solid rgba(51, 65, 85, 0.9);
-    background: #020617;
-    color: #e5e7eb;
-    font-size: 0.85rem;
-    outline: none;
-    margin-top: 2px;
-  "
-/>
-<div class="hint" style="margin-top: 4px;">
-  Use local time — it will be saved in ISO format.
-</div>
+        <label for="pastNoteTime" style="margin-top: 6px;">Timestamp (past)</label>
+        <input
+          id="pastNoteTime"
+          type="datetime-local"
+          style="
+            width: 100%;
+            padding: 8px 10px;
+            border-radius: 10px;
+            border: 1px solid rgba(51, 65, 85, 0.9);
+            background: #020617;
+            color: #e5e7eb;
+            font-size: 0.85rem;
+            outline: none;
+            margin-top: 2px;
+          "
+        />
+        <div class="hint" style="margin-top: 4px;">
+          Use local time — it will be stored in the same ISO format.
+        </div>
 
-<div class="controls" style="margin-top: 6px;">
-  <button id="savePastButton">Save past note</button>
-  <div class="hint">
-    Uses the category you select above.
-  </div>
-</div>
-
+        <div class="controls" style="margin-top: 6px;">
+          <button id="savePastButton">Save past note</button>
+          <div class="hint">
+            Uses the category you’ve selected above.
+          </div>
+        </div>
       </section>
 
-    <!-- Right: search + month/day grouped notes -->
+      <!-- RIGHT PANEL: search + month/day grouped notes -->
       <section class="panel panel-right">
         <h2>Notes</h2>
 
@@ -503,7 +504,7 @@
             id="searchInput"
             class="search-input"
             type="text"
-            placeholder="Search text or category (goals, systems, self, relationships, other)..."
+            placeholder="Search text or category..."
           />
         </div>
 
@@ -572,10 +573,7 @@
         return checked ? checked.value : "";
       }
 
-      function clearSelectedCategory() {
-        const checked = document.querySelector('input[name="category"]:checked');
-        if (checked) checked.checked = false;
-
+      function clearSelectedCategoryHighlight() {
         document
           .getElementById("categoryOptions")
           .querySelectorAll(".category-pill")
@@ -599,14 +597,26 @@
         });
       }
 
-      function createNote(text, category) {
-        const now = new Date();
+      // text + category + optional ISO timestamp (for past notes)
+      function createNote(text, category, createdAtISO) {
+        const baseText = (text || "").trim();
+        if (!baseText) return;
+
+        let createdDate;
+        if (createdAtISO) {
+          const parsed = new Date(createdAtISO);
+          createdDate = isNaN(parsed.getTime()) ? new Date() : parsed;
+        } else {
+          createdDate = new Date();
+        }
+
         const note = {
           id: Date.now() + Math.random(),
-          text: text.trim(),
+          text: baseText,
           category: normalizeCategory(category),
-          createdAt: now.toISOString()
+          createdAt: createdDate.toISOString()
         };
+
         notes.unshift(note);
         saveNotes();
       }
@@ -615,7 +625,7 @@
         if (!(d instanceof Date) || isNaN(d.getTime())) return "unknown";
         const y = d.getFullYear();
         const m = String(d.getMonth() + 1).padStart(2, "0");
-        return `${y}-${m}`; // e.g. "2025-12"
+        return `${y}-${m}`; // e.g., "2025-12"
       }
 
       function getDayKey(d) {
@@ -623,7 +633,7 @@
         const y = d.getFullYear();
         const m = String(d.getMonth() + 1).padStart(2, "0");
         const day = String(d.getDate()).padStart(2, "0");
-        return `${y}-${m}-${day}`; // e.g. "2025-12-18"
+        return `${y}-${m}-${day}`; // e.g., "2025-12-18"
       }
 
       function getMonthLabelFromKey(key) {
@@ -675,7 +685,7 @@
           return;
         }
 
-        // group by month -> day
+        // Build structure: month -> day -> notes
         const structure = {};
         filtered.forEach(note => {
           const d = new Date(note.createdAt);
@@ -691,15 +701,14 @@
           structure[monthKey][dayKey].push(note);
         });
 
-        // sort months (newest first)
-        const monthKeys = Object.keys(structure).sort((a, b) => b.localeCompare(a));
+        const monthKeys = Object.keys(structure).sort((a, b) => b.localeCompare(a)); // newest month first
 
         monthKeys.forEach(monthKey => {
           const monthDays = structure[monthKey];
 
           const monthDetails = document.createElement("details");
           monthDetails.className = "month-block";
-          monthDetails.open = true; // default open
+          monthDetails.open = true;
 
           const monthSummary = document.createElement("summary");
           monthSummary.className = "month-summary";
@@ -724,15 +733,14 @@
           const monthInner = document.createElement("div");
           monthInner.className = "month-inner";
 
-          // sort days (newest first by dayKey)
-          const dayKeys = Object.keys(monthDays).sort((a, b) => b.localeCompare(a));
+          const dayKeys = Object.keys(monthDays).sort((a, b) => b.localeCompare(a)); // newest day first
 
           dayKeys.forEach(dayKey => {
             const dayNotes = monthDays[dayKey];
 
             const dayDetails = document.createElement("details");
             dayDetails.className = "day-block";
-            dayDetails.open = true; // default open
+            dayDetails.open = true;
 
             const daySummary = document.createElement("summary");
             daySummary.className = "day-summary";
@@ -752,7 +760,7 @@
             const dayInner = document.createElement("div");
             dayInner.className = "day-inner";
 
-            // sort notes newest first by time
+            // Sort notes within the day: newest time first
             dayNotes.sort((a, b) => {
               const ta = new Date(a.createdAt).getTime();
               const tb = new Date(b.createdAt).getTime();
@@ -800,29 +808,61 @@
         const saveButton = document.getElementById("saveButton");
         const searchInput = document.getElementById("searchInput");
 
+        const pastNoteInput = document.getElementById("pastNoteInput");
+        const pastNoteTimeInput = document.getElementById("pastNoteTime");
+        const savePastButton = document.getElementById("savePastButton");
+
         attachCategoryPillState();
 
+        // Save "now" note
         saveButton.addEventListener("click", () => {
           const text = noteInput.value.trim();
           const category = getSelectedCategory();
           if (!text) return;
           if (!category) {
-            alert("Pick a category: goals, systems, self, relationships, or other.");
+            alert("Pick a category (goals, systems, self, relationships, or other).");
             return;
           }
           createNote(text, category);
           noteInput.value = "";
-          clearSelectedCategory();
+          // keep category selected on purpose
           renderNotes(searchInput.value);
         });
 
-        // Ctrl+Enter / Cmd+Enter saves
+        // Ctrl+Enter / Cmd+Enter saves new note
         noteInput.addEventListener("keydown", event => {
           if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
             event.preventDefault();
             saveButton.click();
           }
         });
+
+        // Save "past" note
+        if (savePastButton) {
+          savePastButton.addEventListener("click", () => {
+            const text = pastNoteInput.value.trim();
+            const category = getSelectedCategory();
+            const timestamp = (pastNoteTimeInput.value || "").trim();
+
+            if (!text) return;
+
+            if (!category) {
+              alert("Pick a category before saving a past note.");
+              return;
+            }
+
+            if (!timestamp) {
+              alert("Set a timestamp for the past note.");
+              return;
+            }
+
+            createNote(text, category, timestamp);
+
+            pastNoteInput.value = "";
+            // leave timestamp as-is so you can enter multiple from same time if you want
+            renderNotes(searchInput.value);
+          });
+        }
 
         searchInput.addEventListener("input", () => {
           renderNotes(searchInput.value);
