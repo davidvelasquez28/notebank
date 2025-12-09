@@ -241,14 +241,112 @@
       padding-right: 2px;
     }
 
+    /* month/day collapsible styling */
+    details.month-block {
+      border-radius: 10px;
+      border: 1px solid rgba(31, 41, 55, 0.9);
+      background: rgba(15, 23, 42, 0.9);
+      padding: 4px 8px 6px;
+    }
+
+    details.month-block + details.month-block {
+      margin-top: 6px;
+    }
+
+    summary.month-summary {
+      cursor: pointer;
+      list-style: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #9ca3af;
+    }
+
+    summary.month-summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .month-summary-title::before {
+      content: "▸";
+      display: inline-block;
+      margin-right: 6px;
+      transition: transform 0.12s ease;
+      font-size: 0.7rem;
+    }
+
+    details[open] > summary .month-summary-title::before {
+      transform: rotate(90deg);
+    }
+
+    .month-summary-count {
+      font-size: 0.75rem;
+      color: #6b7280;
+    }
+
+    .month-inner {
+      margin-top: 4px;
+      padding-left: 4px;
+      border-left: 1px solid rgba(31, 41, 55, 0.7);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    details.day-block {
+      border-radius: 6px;
+      padding: 2px 4px 4px;
+      background: transparent;
+    }
+
+    summary.day-summary {
+      cursor: pointer;
+      list-style: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-size: 0.8rem;
+      color: #d1d5db;
+    }
+
+    summary.day-summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .day-summary-title::before {
+      content: "▸";
+      display: inline-block;
+      margin-right: 6px;
+      transition: transform 0.12s ease;
+      font-size: 0.7rem;
+    }
+
+    details.day-block[open] > summary .day-summary-title::before {
+      transform: rotate(90deg);
+    }
+
+    .day-summary-count {
+      font-size: 0.75rem;
+      color: #9ca3af;
+    }
+
+    .day-inner {
+      margin-top: 2px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
     .note {
-      padding: 9px 10px;
+      padding: 7px 9px;
       border-radius: 10px;
       background: rgba(15, 23, 42, 0.9);
       border: 1px solid rgba(55, 65, 81, 0.9);
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 2px;
     }
 
     .note-header-row {
@@ -270,19 +368,14 @@
       background: rgba(30, 64, 175, 0.85);
       border: 1px solid rgba(96, 165, 250, 0.7);
       color: #e5e7eb;
-      cursor: pointer;
-      user-select: none;
       white-space: nowrap;
       text-transform: uppercase;
       letter-spacing: 0.05em;
     }
 
-    .note-category-pill:hover {
-      filter: brightness(1.1);
-    }
-
     .note-text {
-      margin: 2px 0 0 0;
+      margin: 0;
+      margin-top: 2px;
       font-size: 0.9rem;
       white-space: pre-wrap;
       word-wrap: break-word;
@@ -360,7 +453,7 @@
         </div>
       </section>
 
-      <!-- Right: search + notes list -->
+      <!-- Right: search + month/day grouped notes -->
       <section class="panel panel-right">
         <h2>Notes</h2>
 
@@ -385,12 +478,15 @@
       let notes = [];
 
       const CATEGORY_VALUES = ["goals", "systems", "self", "relationships", "other"];
+      const MONTH_NAMES = [
+        "January","February","March","April","May","June",
+        "July","August","September","October","November","December"
+      ];
 
       function normalizeCategory(rawCategory, rawTags) {
         const c = (rawCategory || "").toLowerCase().trim();
         if (CATEGORY_VALUES.includes(c)) return c;
 
-        // If old notes had tags, try to infer category from tags
         const tags = Array.isArray(rawTags) ? rawTags.map(t => String(t).toLowerCase()) : [];
 
         if (tags.some(t => t.includes("goal"))) return "goals";
@@ -440,7 +536,6 @@
         const checked = document.querySelector('input[name="category"]:checked');
         if (checked) checked.checked = false;
 
-        // Also clear pill highlight
         document
           .getElementById("categoryOptions")
           .querySelectorAll(".category-pill")
@@ -469,20 +564,48 @@
         const note = {
           id: Date.now() + Math.random(),
           text: text.trim(),
-          category: normalizeCategory(category)
+          category: normalizeCategory(category),
+          createdAt: now.toISOString()
         };
-        note.createdAt = now.toISOString();
         notes.unshift(note);
         saveNotes();
       }
 
-      function formatDate(isoString) {
+      function getMonthKey(d) {
+        if (!(d instanceof Date) || isNaN(d.getTime())) return "unknown";
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        return `${y}-${m}`; // e.g. "2025-12"
+      }
+
+      function getDayKey(d) {
+        if (!(d instanceof Date) || isNaN(d.getTime())) return "unknown";
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        return `${y}-${m}-${day}`; // e.g. "2025-12-18"
+      }
+
+      function getMonthLabelFromKey(key) {
+        if (key === "unknown") return "Unknown";
+        const [y, m] = key.split("-");
+        const idx = parseInt(m, 10) - 1;
+        const name = MONTH_NAMES[idx] || "Unknown";
+        return `${name} ${y}`;
+      }
+
+      function getDayLabelFromKey(key) {
+        if (key === "unknown") return "Unknown day";
+        const [y, m, d] = key.split("-");
+        const idx = parseInt(m, 10) - 1;
+        const monthName = MONTH_NAMES[idx] || "Unknown";
+        return `${monthName} ${parseInt(d, 10)}`;
+      }
+
+      function formatTime(isoString) {
         const d = new Date(isoString);
         if (isNaN(d.getTime())) return "";
-        return d.toLocaleString(undefined, {
-          year: "numeric",
-          month: "short",
-          day: "2-digit",
+        return d.toLocaleTimeString(undefined, {
           hour: "2-digit",
           minute: "2-digit"
         });
@@ -494,11 +617,8 @@
 
         const filtered = query
           ? notes.filter(n => {
-              const textMatch = (n.text || "")
-                .toLowerCase()
-                .includes(query);
-              const cat = (n.category || "").toLowerCase();
-              const catMatch = cat.includes(query);
+              const textMatch = (n.text || "").toLowerCase().includes(query);
+              const catMatch = (n.category || "").toLowerCase().includes(query);
               return textMatch || catMatch;
             })
           : notes;
@@ -515,38 +635,123 @@
           return;
         }
 
+        // group by month -> day
+        const structure = {};
         filtered.forEach(note => {
-          const card = document.createElement("article");
-          card.className = "note";
+          const d = new Date(note.createdAt);
+          const monthKey = getMonthKey(d);
+          const dayKey = getDayKey(d);
 
-          const headerRow = document.createElement("div");
-          headerRow.className = "note-header-row";
+          if (!structure[monthKey]) {
+            structure[monthKey] = {};
+          }
+          if (!structure[monthKey][dayKey]) {
+            structure[monthKey][dayKey] = [];
+          }
+          structure[monthKey][dayKey].push(note);
+        });
 
-          const meta = document.createElement("div");
-          meta.className = "note-meta";
-          meta.textContent = formatDate(note.createdAt);
+        // sort months (newest first)
+        const monthKeys = Object.keys(structure).sort((a, b) => b.localeCompare(a));
 
-          const catPill = document.createElement("span");
-          catPill.className = "note-category-pill";
-          const categoryLabel = (note.category || "other").toUpperCase();
-          catPill.textContent = categoryLabel;
-          catPill.addEventListener("click", () => {
-            const searchInput = document.getElementById("searchInput");
-            const value = (note.category || "").toLowerCase();
-            searchInput.value = value;
-            renderNotes(value);
+        monthKeys.forEach(monthKey => {
+          const monthDays = structure[monthKey];
+
+          const monthDetails = document.createElement("details");
+          monthDetails.className = "month-block";
+          monthDetails.open = true; // default open
+
+          const monthSummary = document.createElement("summary");
+          monthSummary.className = "month-summary";
+
+          const titleSpan = document.createElement("span");
+          titleSpan.className = "month-summary-title";
+          titleSpan.textContent = getMonthLabelFromKey(monthKey);
+
+          const countSpan = document.createElement("span");
+          countSpan.className = "month-summary-count";
+
+          const monthCount = Object.values(monthDays).reduce(
+            (acc, arr) => acc + arr.length,
+            0
+          );
+          countSpan.textContent = `${monthCount} note${monthCount !== 1 ? "s" : ""}`;
+
+          monthSummary.appendChild(titleSpan);
+          monthSummary.appendChild(countSpan);
+          monthDetails.appendChild(monthSummary);
+
+          const monthInner = document.createElement("div");
+          monthInner.className = "month-inner";
+
+          // sort days (newest first by dayKey)
+          const dayKeys = Object.keys(monthDays).sort((a, b) => b.localeCompare(a));
+
+          dayKeys.forEach(dayKey => {
+            const dayNotes = monthDays[dayKey];
+
+            const dayDetails = document.createElement("details");
+            dayDetails.className = "day-block";
+            dayDetails.open = true; // default open
+
+            const daySummary = document.createElement("summary");
+            daySummary.className = "day-summary";
+
+            const dayTitle = document.createElement("span");
+            dayTitle.className = "day-summary-title";
+            dayTitle.textContent = getDayLabelFromKey(dayKey);
+
+            const dayCount = document.createElement("span");
+            dayCount.className = "day-summary-count";
+            dayCount.textContent = `${dayNotes.length} note${dayNotes.length !== 1 ? "s" : ""}`;
+
+            daySummary.appendChild(dayTitle);
+            daySummary.appendChild(dayCount);
+            dayDetails.appendChild(daySummary);
+
+            const dayInner = document.createElement("div");
+            dayInner.className = "day-inner";
+
+            // sort notes newest first by time
+            dayNotes.sort((a, b) => {
+              const ta = new Date(a.createdAt).getTime();
+              const tb = new Date(b.createdAt).getTime();
+              return tb - ta;
+            });
+
+            dayNotes.forEach(note => {
+              const card = document.createElement("article");
+              card.className = "note";
+
+              const headerRow = document.createElement("div");
+              headerRow.className = "note-header-row";
+
+              const meta = document.createElement("div");
+              meta.className = "note-meta";
+              meta.textContent = formatTime(note.createdAt);
+
+              const catPill = document.createElement("span");
+              catPill.className = "note-category-pill";
+              catPill.textContent = (note.category || "other").toUpperCase();
+
+              headerRow.appendChild(meta);
+              headerRow.appendChild(catPill);
+
+              const text = document.createElement("p");
+              text.className = "note-text";
+              text.textContent = note.text;
+
+              card.appendChild(headerRow);
+              card.appendChild(text);
+              dayInner.appendChild(card);
+            });
+
+            dayDetails.appendChild(dayInner);
+            monthInner.appendChild(dayDetails);
           });
 
-          headerRow.appendChild(meta);
-          headerRow.appendChild(catPill);
-          card.appendChild(headerRow);
-
-          const text = document.createElement("p");
-          text.className = "note-text";
-          text.textContent = note.text;
-
-          card.appendChild(text);
-          listEl.appendChild(card);
+          monthDetails.appendChild(monthInner);
+          listEl.appendChild(monthDetails);
         });
       }
 
@@ -571,7 +776,7 @@
           renderNotes(searchInput.value);
         });
 
-        // Ctrl+Enter / Cmd+Enter shortcut
+        // Ctrl+Enter / Cmd+Enter saves
         noteInput.addEventListener("keydown", event => {
           if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
             event.preventDefault();
