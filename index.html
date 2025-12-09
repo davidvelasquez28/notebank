@@ -451,9 +451,49 @@
             <span class="kbd">Enter</span>
           </div>
         </div>
+
+        <hr style="margin: 14px 0; border: none; border-top: 1px solid rgba(51,65,85,0.8);" />
+
+<h2 style="font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.07em; color: #9ca3af; margin: 0 0 4px;">
+  Add past note
+</h2>
+
+<label for="pastNoteInput">Note</label>
+<textarea
+  id="pastNoteInput"
+  placeholder="Paste an old note here..."
+></textarea>
+
+<label for="pastNoteTime" style="margin-top: 6px;">Timestamp (past)</label>
+<input
+  id="pastNoteTime"
+  type="datetime-local"
+  style="
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: 10px;
+    border: 1px solid rgba(51, 65, 85, 0.9);
+    background: #020617;
+    color: #e5e7eb;
+    font-size: 0.85rem;
+    outline: none;
+    margin-top: 2px;
+  "
+/>
+<div class="hint" style="margin-top: 4px;">
+  Use local time — it will be saved in ISO format.
+</div>
+
+<div class="controls" style="margin-top: 6px;">
+  <button id="savePastButton">Save past note</button>
+  <div class="hint">
+    Uses the category you select above.
+  </div>
+</div>
+
       </section>
 
-      <!-- Right: search + month/day grouped notes -->
+    <!-- Right: search + month/day grouped notes -->
       <section class="panel panel-right">
         <h2>Notes</h2>
 
