@@ -107,7 +107,6 @@
 
     textarea {
       width: 100%;
-      min-height: 230px;
       resize: vertical;
       padding: 10px 11px;
       border-radius: 10px;
@@ -123,6 +122,42 @@
     textarea:focus {
       border-color: #6366f1;
       box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.6);
+    }
+
+    .category-row {
+      margin-top: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .category-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 2px;
+    }
+
+    .category-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      background: #020617;
+      cursor: pointer;
+      font-size: 0.78rem;
+      user-select: none;
+    }
+
+    .category-pill input {
+      accent-color: #6366f1;
+    }
+
+    .category-pill--active {
+      border-color: #6366f1;
+      background: rgba(79, 70, 229, 0.15);
     }
 
     .controls {
@@ -216,13 +251,38 @@
       gap: 4px;
     }
 
+    .note-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
     .note-meta {
       font-size: 0.75rem;
       color: #9ca3af;
     }
 
+    .note-category-pill {
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(30, 64, 175, 0.85);
+      border: 1px solid rgba(96, 165, 250, 0.7);
+      color: #e5e7eb;
+      cursor: pointer;
+      user-select: none;
+      white-space: nowrap;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .note-category-pill:hover {
+      filter: brightness(1.1);
+    }
+
     .note-text {
-      margin: 0;
+      margin: 2px 0 0 0;
       font-size: 0.9rem;
       white-space: pre-wrap;
       word-wrap: break-word;
@@ -253,7 +313,39 @@
         <h2>New note</h2>
 
         <label for="noteInput">Note</label>
-        <textarea id="noteInput" placeholder="Type anything you’d normally email yourself..."></textarea>
+        <textarea
+          id="noteInput"
+          placeholder="Type anything you’d normally email yourself..."
+        ></textarea>
+
+        <div class="category-row">
+          <label>Category (required)</label>
+          <div class="category-options" id="categoryOptions">
+            <label class="category-pill">
+              <input type="radio" name="category" value="goals" />
+              <span>Goals</span>
+            </label>
+            <label class="category-pill">
+              <input type="radio" name="category" value="systems" />
+              <span>Systems</span>
+            </label>
+            <label class="category-pill">
+              <input type="radio" name="category" value="self" />
+              <span>Self</span>
+            </label>
+            <label class="category-pill">
+              <input type="radio" name="category" value="relationships" />
+              <span>Relationships</span>
+            </label>
+            <label class="category-pill">
+              <input type="radio" name="category" value="other" />
+              <span>Other</span>
+            </label>
+          </div>
+          <div class="hint">
+            Every note lives in one lane: goals, systems, self, relationships, or other.
+          </div>
+        </div>
 
         <div class="controls">
           <button id="saveButton">Save note</button>
@@ -278,7 +370,7 @@
             id="searchInput"
             class="search-input"
             type="text"
-            placeholder="Search within all saved notes..."
+            placeholder="Search text or category (goals, systems, self, relationships, other)..."
           />
         </div>
 
@@ -292,6 +384,25 @@
       const STORAGE_KEY = "slipboxNotes";
       let notes = [];
 
+      const CATEGORY_VALUES = ["goals", "systems", "self", "relationships", "other"];
+
+      function normalizeCategory(rawCategory, rawTags) {
+        const c = (rawCategory || "").toLowerCase().trim();
+        if (CATEGORY_VALUES.includes(c)) return c;
+
+        // If old notes had tags, try to infer category from tags
+        const tags = Array.isArray(rawTags) ? rawTags.map(t => String(t).toLowerCase()) : [];
+
+        if (tags.some(t => t.includes("goal"))) return "goals";
+        if (tags.some(t => t.includes("system") || t.includes("routine"))) return "systems";
+        if (tags.some(t => t.includes("self") || t.includes("mood") || t.includes("feel"))) return "self";
+        if (tags.some(t => t.includes("family") || t.includes("friend") || t.includes("relationship"))) {
+          return "relationships";
+        }
+
+        return "other";
+      }
+
       function loadNotes() {
         const raw = localStorage.getItem(STORAGE_KEY);
         if (!raw) {
@@ -300,7 +411,16 @@
         }
         try {
           const parsed = JSON.parse(raw);
-          notes = Array.isArray(parsed) ? parsed : [];
+          if (Array.isArray(parsed)) {
+            notes = parsed.map(n => ({
+              id: n.id,
+              text: n.text || "",
+              createdAt: n.createdAt || new Date().toISOString(),
+              category: normalizeCategory(n.category, n.tags)
+            }));
+          } else {
+            notes = [];
+          }
         } catch (err) {
           console.error("Failed to parse notes from localStorage", err);
           notes = [];
@@ -311,14 +431,47 @@
         localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
       }
 
-      function createNote(text) {
+      function getSelectedCategory() {
+        const checked = document.querySelector('input[name="category"]:checked');
+        return checked ? checked.value : "";
+      }
+
+      function clearSelectedCategory() {
+        const checked = document.querySelector('input[name="category"]:checked');
+        if (checked) checked.checked = false;
+
+        // Also clear pill highlight
+        document
+          .getElementById("categoryOptions")
+          .querySelectorAll(".category-pill")
+          .forEach(l => l.classList.remove("category-pill--active"));
+      }
+
+      function attachCategoryPillState() {
+        const container = document.getElementById("categoryOptions");
+        if (!container) return;
+        container.querySelectorAll(".category-pill").forEach(labelEl => {
+          const input = labelEl.querySelector("input[type='radio']");
+          if (!input) return;
+          input.addEventListener("change", () => {
+            container
+              .querySelectorAll(".category-pill")
+              .forEach(l => l.classList.remove("category-pill--active"));
+            if (input.checked) {
+              labelEl.classList.add("category-pill--active");
+            }
+          });
+        });
+      }
+
+      function createNote(text, category) {
         const now = new Date();
         const note = {
-          id: Date.now(),
+          id: Date.now() + Math.random(),
           text: text.trim(),
-          createdAt: now.toISOString()
+          category: normalizeCategory(category)
         };
-        // newest at the top
+        note.createdAt = now.toISOString();
         notes.unshift(note);
         saveNotes();
       }
@@ -340,7 +493,14 @@
         const query = filterValue.toLowerCase().trim();
 
         const filtered = query
-          ? notes.filter(n => n.text.toLowerCase().includes(query))
+          ? notes.filter(n => {
+              const textMatch = (n.text || "")
+                .toLowerCase()
+                .includes(query);
+              const cat = (n.category || "").toLowerCase();
+              const catMatch = cat.includes(query);
+              return textMatch || catMatch;
+            })
           : notes;
 
         listEl.innerHTML = "";
@@ -359,15 +519,32 @@
           const card = document.createElement("article");
           card.className = "note";
 
+          const headerRow = document.createElement("div");
+          headerRow.className = "note-header-row";
+
           const meta = document.createElement("div");
           meta.className = "note-meta";
           meta.textContent = formatDate(note.createdAt);
+
+          const catPill = document.createElement("span");
+          catPill.className = "note-category-pill";
+          const categoryLabel = (note.category || "other").toUpperCase();
+          catPill.textContent = categoryLabel;
+          catPill.addEventListener("click", () => {
+            const searchInput = document.getElementById("searchInput");
+            const value = (note.category || "").toLowerCase();
+            searchInput.value = value;
+            renderNotes(value);
+          });
+
+          headerRow.appendChild(meta);
+          headerRow.appendChild(catPill);
+          card.appendChild(headerRow);
 
           const text = document.createElement("p");
           text.className = "note-text";
           text.textContent = note.text;
 
-          card.appendChild(meta);
           card.appendChild(text);
           listEl.appendChild(card);
         });
@@ -378,20 +555,25 @@
         const saveButton = document.getElementById("saveButton");
         const searchInput = document.getElementById("searchInput");
 
+        attachCategoryPillState();
+
         saveButton.addEventListener("click", () => {
           const text = noteInput.value.trim();
+          const category = getSelectedCategory();
           if (!text) return;
-          createNote(text);
+          if (!category) {
+            alert("Pick a category: goals, systems, self, relationships, or other.");
+            return;
+          }
+          createNote(text, category);
           noteInput.value = "";
+          clearSelectedCategory();
           renderNotes(searchInput.value);
         });
 
         // Ctrl+Enter / Cmd+Enter shortcut
         noteInput.addEventListener("keydown", event => {
-          if (
-            (event.ctrlKey || event.metaKey) &&
-            event.key === "Enter"
-          ) {
+          if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
             event.preventDefault();
             saveButton.click();
           }
