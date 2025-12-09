@@ -235,20 +235,60 @@
       margin-top: 8px;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 12px;
       max-height: 460px;
       overflow-y: auto;
       padding-right: 2px;
     }
 
+    .month-section {
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(31, 41, 55, 0.9);
+    }
+
+    .month-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #9ca3af;
+      margin-bottom: 4px;
+    }
+
+    .month-header-count {
+      font-size: 0.75rem;
+      color: #6b7280;
+    }
+
+    .category-group {
+      margin: 4px 0 6px 0;
+    }
+
+    .category-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+      color: #d1d5db;
+      margin: 4px 0;
+    }
+
+    .category-title-row span:last-child {
+      font-size: 0.75rem;
+      color: #9ca3af;
+    }
+
     .note {
-      padding: 9px 10px;
+      padding: 7px 9px;
       border-radius: 10px;
       background: rgba(15, 23, 42, 0.9);
       border: 1px solid rgba(55, 65, 81, 0.9);
       display: flex;
       flex-direction: column;
       gap: 4px;
+      margin-top: 4px;
     }
 
     .note-header-row {
@@ -360,7 +400,7 @@
         </div>
       </section>
 
-      <!-- Right: search + notes list -->
+      <!-- Right: search + grouped notes list -->
       <section class="panel panel-right">
         <h2>Notes</h2>
 
@@ -385,12 +425,16 @@
       let notes = [];
 
       const CATEGORY_VALUES = ["goals", "systems", "self", "relationships", "other"];
+      const MONTH_NAMES = [
+        "January","February","March","April","May","June",
+        "July","August","September","October","November","December"
+      ];
 
       function normalizeCategory(rawCategory, rawTags) {
         const c = (rawCategory || "").toLowerCase().trim();
         if (CATEGORY_VALUES.includes(c)) return c;
 
-        // If old notes had tags, try to infer category from tags
+        // For older notes that might have tags
         const tags = Array.isArray(rawTags) ? rawTags.map(t => String(t).toLowerCase()) : [];
 
         if (tags.some(t => t.includes("goal"))) return "goals";
@@ -440,7 +484,6 @@
         const checked = document.querySelector('input[name="category"]:checked');
         if (checked) checked.checked = false;
 
-        // Also clear pill highlight
         document
           .getElementById("categoryOptions")
           .querySelectorAll(".category-pill")
@@ -469,9 +512,9 @@
         const note = {
           id: Date.now() + Math.random(),
           text: text.trim(),
-          category: normalizeCategory(category)
+          category: normalizeCategory(category),
+          createdAt: now.toISOString()
         };
-        note.createdAt = now.toISOString();
         notes.unshift(note);
         saveNotes();
       }
@@ -486,6 +529,23 @@
           hour: "2-digit",
           minute: "2-digit"
         });
+      }
+
+      function getMonthKey(isoString) {
+        const d = new Date(isoString);
+        if (isNaN(d.getTime())) return "unknown";
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, "0");
+        return year + "-" + month; // e.g. "2025-12"
+      }
+
+      function getMonthLabel(key) {
+        if (key === "unknown") return "Unknown";
+        const [yearStr, monthStr] = key.split("-");
+        const year = yearStr;
+        const monthIdx = parseInt(monthStr, 10) - 1;
+        const name = MONTH_NAMES[monthIdx] || "Unknown";
+        return name + " " + year;
       }
 
       function renderNotes(filterValue = "") {
@@ -515,38 +575,105 @@
           return;
         }
 
+        // Group by month, then by category
+        const groups = {};
         filtered.forEach(note => {
-          const card = document.createElement("article");
-          card.className = "note";
+          const monthKey = getMonthKey(note.createdAt);
+          if (!groups[monthKey]) {
+            groups[monthKey] = {
+              label: getMonthLabel(monthKey),
+              totalCount: 0,
+              byCategory: {}
+            };
+            CATEGORY_VALUES.forEach(cat => {
+              groups[monthKey].byCategory[cat] = [];
+            });
+          }
+          const cat = normalizeCategory(note.category);
+          groups[monthKey].byCategory[cat].push(note);
+          groups[monthKey].totalCount++;
+        });
 
-          const headerRow = document.createElement("div");
-          headerRow.className = "note-header-row";
+        const monthKeys = Object.keys(groups).sort((a, b) => b.localeCompare(a)); // newest month first
 
-          const meta = document.createElement("div");
-          meta.className = "note-meta";
-          meta.textContent = formatDate(note.createdAt);
+        monthKeys.forEach(monthKey => {
+          const monthData = groups[monthKey];
 
-          const catPill = document.createElement("span");
-          catPill.className = "note-category-pill";
-          const categoryLabel = (note.category || "other").toUpperCase();
-          catPill.textContent = categoryLabel;
-          catPill.addEventListener("click", () => {
-            const searchInput = document.getElementById("searchInput");
-            const value = (note.category || "").toLowerCase();
-            searchInput.value = value;
-            renderNotes(value);
+          const monthSection = document.createElement("section");
+          monthSection.className = "month-section";
+
+          const monthHeader = document.createElement("div");
+          monthHeader.className = "month-header";
+
+          const monthTitle = document.createElement("span");
+          monthTitle.textContent = monthData.label;
+
+          const monthCount = document.createElement("span");
+          monthCount.className = "month-header-count";
+          monthCount.textContent = monthData.totalCount + " notes";
+
+          monthHeader.appendChild(monthTitle);
+          monthHeader.appendChild(monthCount);
+          monthSection.appendChild(monthHeader);
+
+          CATEGORY_VALUES.forEach(cat => {
+            const catNotes = monthData.byCategory[cat] || [];
+            if (!catNotes.length) return;
+
+            const groupEl = document.createElement("div");
+            groupEl.className = "category-group";
+
+            const titleRow = document.createElement("div");
+            titleRow.className = "category-title-row";
+
+            const labelEl = document.createElement("span");
+            labelEl.textContent = cat.charAt(0).toUpperCase() + cat.slice(1);
+
+            const countEl = document.createElement("span");
+            countEl.textContent = catNotes.length + " note" + (catNotes.length !== 1 ? "s" : "");
+
+            titleRow.appendChild(labelEl);
+            titleRow.appendChild(countEl);
+            groupEl.appendChild(titleRow);
+
+            catNotes.forEach(note => {
+              const card = document.createElement("article");
+              card.className = "note";
+
+              const headerRow = document.createElement("div");
+              headerRow.className = "note-header-row";
+
+              const meta = document.createElement("div");
+              meta.className = "note-meta";
+              meta.textContent = formatDate(note.createdAt);
+
+              const catPill = document.createElement("span");
+              catPill.className = "note-category-pill";
+              const categoryLabel = (note.category || "other").toUpperCase();
+              catPill.textContent = categoryLabel;
+              catPill.addEventListener("click", () => {
+                const searchInput = document.getElementById("searchInput");
+                const value = (note.category || "").toLowerCase();
+                searchInput.value = value;
+                renderNotes(value);
+              });
+
+              headerRow.appendChild(meta);
+              headerRow.appendChild(catPill);
+              card.appendChild(headerRow);
+
+              const text = document.createElement("p");
+              text.className = "note-text";
+              text.textContent = note.text;
+
+              card.appendChild(text);
+              groupEl.appendChild(card);
+            });
+
+            monthSection.appendChild(groupEl);
           });
 
-          headerRow.appendChild(meta);
-          headerRow.appendChild(catPill);
-          card.appendChild(headerRow);
-
-          const text = document.createElement("p");
-          text.className = "note-text";
-          text.textContent = note.text;
-
-          card.appendChild(text);
-          listEl.appendChild(card);
+          listEl.appendChild(monthSection);
         });
       }
 
