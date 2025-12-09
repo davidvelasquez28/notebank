@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Slipbox</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+                   "Segoe UI", sans-serif;
+      color-scheme: light dark;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #0f172a;
+      color: #e5e7eb;
+      display: flex;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .app {
+      max-width: 1100px;
+      width: 100%;
+      background: rgba(15, 23, 42, 0.95);
+      border-radius: 18px;
+      padding: 20px 22px 24px;
+      box-shadow:
+        0 18px 45px rgba(0, 0, 0, 0.55),
+        0 0 0 1px rgba(148, 163, 184, 0.2);
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.35);
+    }
+
+    .title {
+      font-size: 1.4rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    .subtitle {
+      font-size: 0.8rem;
+      color: #9ca3af;
+    }
+
+    main.layout {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    @media (min-width: 800px) {
+      main.layout {
+        flex-direction: row;
+        align-items: flex-start;
+      }
+    }
+
+    .panel {
+      background: rgba(15, 23, 42, 0.7);
+      border-radius: 14px;
+      padding: 16px 14px 14px;
+      border: 1px solid rgba(51, 65, 85, 0.9);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .panel-left {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .panel-right {
+      flex: 1.1;
+      min-width: 0;
+    }
+
+    .panel h2 {
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: #9ca3af;
+      margin: 0;
+    }
+
+    label {
+      font-size: 0.85rem;
+      color: #cbd5f5;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 230px;
+      resize: vertical;
+      padding: 10px 11px;
+      border-radius: 10px;
+      border: 1px solid rgba(51, 65, 85, 0.9);
+      background: #020617;
+      color: #e5e7eb;
+      font-family: inherit;
+      font-size: 0.9rem;
+      line-height: 1.4;
+      outline: none;
+    }
+
+    textarea:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.6);
+    }
+
+    .controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-top: 4px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      border: none;
+      border-radius: 999px;
+      padding: 8px 18px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      background: linear-gradient(135deg, #6366f1, #7c3aed);
+      color: white;
+      cursor: pointer;
+      transition: transform 0.06s ease, box-shadow 0.06s ease, opacity 0.08s;
+      box-shadow: 0 8px 18px rgba(79, 70, 229, 0.5);
+      white-space: nowrap;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 28px rgba(79, 70, 229, 0.7);
+    }
+
+    button:active {
+      transform: translateY(0);
+      box-shadow: 0 5px 14px rgba(79, 70, 229, 0.6);
+      opacity: 0.95;
+    }
+
+    .hint {
+      font-size: 0.75rem;
+      color: #9ca3af;
+    }
+
+    .kbd {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+        "Liberation Mono", "Courier New", monospace;
+      font-size: 0.75rem;
+      background: rgba(15, 23, 42, 0.9);
+      padding: 2px 7px;
+      border-radius: 4px;
+      border: 1px solid rgba(75, 85, 99, 0.9);
+    }
+
+    .search-row {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(51, 65, 85, 0.9);
+      background: #020617;
+      color: #e5e7eb;
+      font-size: 0.85rem;
+      outline: none;
+    }
+
+    .search-input:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.6);
+    }
+
+    .notes-list {
+      margin-top: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 460px;
+      overflow-y: auto;
+      padding-right: 2px;
+    }
+
+    .note {
+      padding: 9px 10px;
+      border-radius: 10px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .note-meta {
+      font-size: 0.75rem;
+      color: #9ca3af;
+    }
+
+    .note-text {
+      margin: 0;
+      font-size: 0.9rem;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    .empty {
+      font-size: 0.8rem;
+      color: #6b7280;
+      padding: 12px 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div>
+        <div class="title">Slipbox</div>
+        <div class="subtitle">A minimal inbox for your notes</div>
+      </div>
+      <div class="subtitle">
+        Stored locally · No account · No sync (yet)
+      </div>
+    </header>
+
+    <main class="layout">
+      <!-- Left: input / composer -->
+      <section class="panel panel-left">
+        <h2>New note</h2>
+
+        <label for="noteInput">Note</label>
+        <textarea id="noteInput" placeholder="Type anything you’d normally email yourself..."></textarea>
+
+        <div class="controls">
+          <button id="saveButton">Save note</button>
+          <div class="hint">
+            Saved with date &amp; time · Shortcut:
+            <span class="kbd">Ctrl</span> +
+            <span class="kbd">Enter</span>
+            /
+            <span class="kbd">⌘</span> +
+            <span class="kbd">Enter</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right: search + notes list -->
+      <section class="panel panel-right">
+        <h2>Notes</h2>
+
+        <div class="search-row">
+          <label for="searchInput">Search</label>
+          <input
+            id="searchInput"
+            class="search-input"
+            type="text"
+            placeholder="Search within all saved notes..."
+          />
+        </div>
+
+        <div id="notesList" class="notes-list"></div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    (function () {
+      const STORAGE_KEY = "slipboxNotes";
+      let notes = [];
+
+      function loadNotes() {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) {
+          notes = [];
+          return;
+        }
+        try {
+          const parsed = JSON.parse(raw);
+          notes = Array.isArray(parsed) ? parsed : [];
+        } catch (err) {
+          console.error("Failed to parse notes from localStorage", err);
+          notes = [];
+        }
+      }
+
+      function saveNotes() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
+      }
+
+      function createNote(text) {
+        const now = new Date();
+        const note = {
+          id: Date.now(),
+          text: text.trim(),
+          createdAt: now.toISOString()
+        };
+        // newest at the top
+        notes.unshift(note);
+        saveNotes();
+      }
+
+      function formatDate(isoString) {
+        const d = new Date(isoString);
+        if (isNaN(d.getTime())) return "";
+        return d.toLocaleString(undefined, {
+          year: "numeric",
+          month: "short",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit"
+        });
+      }
+
+      function renderNotes(filterValue = "") {
+        const listEl = document.getElementById("notesList");
+        const query = filterValue.toLowerCase().trim();
+
+        const filtered = query
+          ? notes.filter(n => n.text.toLowerCase().includes(query))
+          : notes;
+
+        listEl.innerHTML = "";
+
+        if (!filtered.length) {
+          const empty = document.createElement("p");
+          empty.className = "empty";
+          empty.textContent = query
+            ? "No notes match your search."
+            : "No notes yet. Type on the left and save your first one.";
+          listEl.appendChild(empty);
+          return;
+        }
+
+        filtered.forEach(note => {
+          const card = document.createElement("article");
+          card.className = "note";
+
+          const meta = document.createElement("div");
+          meta.className = "note-meta";
+          meta.textContent = formatDate(note.createdAt);
+
+          const text = document.createElement("p");
+          text.className = "note-text";
+          text.textContent = note.text;
+
+          card.appendChild(meta);
+          card.appendChild(text);
+          listEl.appendChild(card);
+        });
+      }
+
+      function setup() {
+        const noteInput = document.getElementById("noteInput");
+        const saveButton = document.getElementById("saveButton");
+        const searchInput = document.getElementById("searchInput");
+
+        saveButton.addEventListener("click", () => {
+          const text = noteInput.value.trim();
+          if (!text) return;
+          createNote(text);
+          noteInput.value = "";
+          renderNotes(searchInput.value);
+        });
+
+        // Ctrl+Enter / Cmd+Enter shortcut
+        noteInput.addEventListener("keydown", event => {
+          if (
+            (event.ctrlKey || event.metaKey) &&
+            event.key === "Enter"
+          ) {
+            event.preventDefault();
+            saveButton.click();
+          }
+        });
+
+        searchInput.addEventListener("input", () => {
+          renderNotes(searchInput.value);
+        });
+
+        loadNotes();
+        renderNotes();
+      }
+
+      window.addEventListener("DOMContentLoaded", setup);
+    })();
+  </script>
+</body>
+</html>
