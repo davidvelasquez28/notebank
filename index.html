@@ -241,8 +241,6 @@
       padding-right: 2px;
     }
 
-    /* Collapsible month/day blocks */
-
     details.month-block {
       border-radius: 10px;
       border: 1px solid rgba(31, 41, 55, 0.9);
@@ -402,14 +400,14 @@
     </header>
 
     <main class="layout">
-      <!-- LEFT PANEL: new + past notes -->
+      <!-- LEFT PANEL -->
       <section class="panel panel-left">
         <h2>New note</h2>
 
         <label for="noteInput">Note</label>
         <textarea
           id="noteInput"
-          placeholder="go time."
+          placeholder="Type anything you’d normally email yourself..."
         ></textarea>
 
         <div class="category-row">
@@ -424,19 +422,22 @@
               <span>Systems</span>
             </label>
             <label class="category-pill">
-              <input type="radio" name="category" value="self" />
-              <span>Self</span>
+              <input type="radio" name="category" value="mindset" />
+              <span>Mindset</span>
             </label>
             <label class="category-pill">
               <input type="radio" name="category" value="relationships" />
               <span>Relationships</span>
             </label>
             <label class="category-pill">
+              <input type="radio" name="category" value="todo" />
+              <span>To-Do</span>
+            </label>
+            <label class="category-pill">
               <input type="radio" name="category" value="other" />
               <span>Other</span>
             </label>
           </div>
-
         </div>
 
         <div class="controls">
@@ -451,7 +452,6 @@
           </div>
         </div>
 
-        <!-- PAST NOTE SECTION -->
         <hr style="margin: 14px 0; border: none; border-top: 1px solid rgba(51,65,85,0.8);" />
 
         <h2 style="font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.07em; color: #9ca3af; margin: 0 0 4px;">
@@ -480,6 +480,9 @@
             margin-top: 2px;
           "
         />
+        <div class="hint" style="margin-top: 4px;">
+          Use local time — it will be stored in ISO format.
+        </div>
 
         <div class="controls" style="margin-top: 6px;">
           <button id="savePastButton">Save past note</button>
@@ -489,7 +492,7 @@
         </div>
       </section>
 
-      <!-- RIGHT PANEL: search + month/day grouped notes -->
+      <!-- RIGHT PANEL -->
       <section class="panel panel-right">
         <h2>Notes</h2>
 
@@ -499,7 +502,7 @@
             id="searchInput"
             class="search-input"
             type="text"
-            placeholder="Search text or category..."
+            placeholder="Search text or category (goals, systems, mindset, relationships, todo, other)..."
           />
         </div>
 
@@ -513,7 +516,7 @@
       const STORAGE_KEY = "slipboxNotes";
       let notes = [];
 
-      const CATEGORY_VALUES = ["goals", "systems", "self", "relationships", "other"];
+      const CATEGORY_VALUES = ["goals", "systems", "mindset", "relationships", "todo", "other"];
       const MONTH_NAMES = [
         "January","February","March","April","May","June",
         "July","August","September","October","November","December"
@@ -527,9 +530,14 @@
 
         if (tags.some(t => t.includes("goal"))) return "goals";
         if (tags.some(t => t.includes("system") || t.includes("routine"))) return "systems";
-        if (tags.some(t => t.includes("self") || t.includes("mood") || t.includes("feel"))) return "self";
+        if (tags.some(t => t.includes("mindset") || t.includes("self") || t.includes("mood") || t.includes("feel"))) {
+          return "mindset";
+        }
         if (tags.some(t => t.includes("family") || t.includes("friend") || t.includes("relationship"))) {
           return "relationships";
+        }
+        if (tags.some(t => t.includes("todo") || t.includes("to-do") || t.includes("task"))) {
+          return "todo";
         }
 
         return "other";
@@ -568,13 +576,6 @@
         return checked ? checked.value : "";
       }
 
-      function clearSelectedCategoryHighlight() {
-        document
-          .getElementById("categoryOptions")
-          .querySelectorAll(".category-pill")
-          .forEach(l => l.classList.remove("category-pill--active"));
-      }
-
       function attachCategoryPillState() {
         const container = document.getElementById("categoryOptions");
         if (!container) return;
@@ -592,7 +593,6 @@
         });
       }
 
-      // text + category + optional ISO timestamp (for past notes)
       function createNote(text, category, createdAtISO) {
         const baseText = (text || "").trim();
         if (!baseText) return;
@@ -620,7 +620,7 @@
         if (!(d instanceof Date) || isNaN(d.getTime())) return "unknown";
         const y = d.getFullYear();
         const m = String(d.getMonth() + 1).padStart(2, "0");
-        return `${y}-${m}`; // e.g., "2025-12"
+        return `${y}-${m}`;
       }
 
       function getDayKey(d) {
@@ -628,7 +628,7 @@
         const y = d.getFullYear();
         const m = String(d.getMonth() + 1).padStart(2, "0");
         const day = String(d.getDate()).padStart(2, "0");
-        return `${y}-${m}-${day}`; // e.g., "2025-12-18"
+        return `${y}-${m}-${day}`;
       }
 
       function getMonthLabelFromKey(key) {
@@ -680,7 +680,6 @@
           return;
         }
 
-        // Build structure: month -> day -> notes
         const structure = {};
         filtered.forEach(note => {
           const d = new Date(note.createdAt);
@@ -696,7 +695,7 @@
           structure[monthKey][dayKey].push(note);
         });
 
-        const monthKeys = Object.keys(structure).sort((a, b) => b.localeCompare(a)); // newest month first
+        const monthKeys = Object.keys(structure).sort((a, b) => b.localeCompare(a));
 
         monthKeys.forEach(monthKey => {
           const monthDays = structure[monthKey];
@@ -728,7 +727,7 @@
           const monthInner = document.createElement("div");
           monthInner.className = "month-inner";
 
-          const dayKeys = Object.keys(monthDays).sort((a, b) => b.localeCompare(a)); // newest day first
+          const dayKeys = Object.keys(monthDays).sort((a, b) => b.localeCompare(a));
 
           dayKeys.forEach(dayKey => {
             const dayNotes = monthDays[dayKey];
@@ -755,7 +754,6 @@
             const dayInner = document.createElement("div");
             dayInner.className = "day-inner";
 
-            // Sort notes within the day: newest time first
             dayNotes.sort((a, b) => {
               const ta = new Date(a.createdAt).getTime();
               const tb = new Date(b.createdAt).getTime();
@@ -809,22 +807,19 @@
 
         attachCategoryPillState();
 
-        // Save "now" note
         saveButton.addEventListener("click", () => {
           const text = noteInput.value.trim();
           const category = getSelectedCategory();
           if (!text) return;
           if (!category) {
-            alert("Pick a category (goals, systems, self, relationships, or other).");
+            alert("Pick a category (goals, systems, mindset, relationships, todo, other).");
             return;
           }
           createNote(text, category);
           noteInput.value = "";
-          // keep category selected on purpose
           renderNotes(searchInput.value);
         });
 
-        // Ctrl+Enter / Cmd+Enter saves new note
         noteInput.addEventListener("keydown", event => {
           if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
             event.preventDefault();
@@ -832,7 +827,6 @@
           }
         });
 
-        // Save "past" note
         if (savePastButton) {
           savePastButton.addEventListener("click", () => {
             const text = pastNoteInput.value.trim();
@@ -854,7 +848,6 @@
             createNote(text, category, timestamp);
 
             pastNoteInput.value = "";
-            // leave timestamp as-is so you can enter multiple from same time if you want
             renderNotes(searchInput.value);
           });
         }
