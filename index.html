@@ -10,10 +10,7 @@
                    "Segoe UI", sans-serif;
       color-scheme: light dark;
     }
-
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -54,10 +51,7 @@
       font-weight: 600;
     }
 
-    .subtitle {
-      font-size: 0.8rem;
-      color: #9ca3af;
-    }
+    .subtitle { font-size: 0.8rem; color: #9ca3af; }
 
     main.layout {
       display: flex;
@@ -82,15 +76,8 @@
       gap: 10px;
     }
 
-    .panel-left {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .panel-right {
-      flex: 1.1;
-      min-width: 0;
-    }
+    .panel-left { flex: 1; min-width: 0; }
+    .panel-right { flex: 1.1; min-width: 0; }
 
     .panel h2 {
       font-size: 0.9rem;
@@ -100,10 +87,7 @@
       margin: 0;
     }
 
-    label {
-      font-size: 0.85rem;
-      color: #cbd5f5;
-    }
+    label { font-size: 0.85rem; color: #cbd5f5; }
 
     textarea {
       width: 100%;
@@ -151,9 +135,7 @@
       user-select: none;
     }
 
-    .category-pill input {
-      accent-color: #6366f1;
-    }
+    .category-pill input { accent-color: #6366f1; }
 
     .category-pill--active {
       border-color: #6366f1;
@@ -194,10 +176,24 @@
       opacity: 0.95;
     }
 
-    .hint {
-      font-size: 0.75rem;
-      color: #9ca3af;
+    button.secondary {
+      background: rgba(2, 6, 23, 1);
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      box-shadow: none;
     }
+
+    button.secondary:hover {
+      transform: translateY(-1px);
+      box-shadow: none;
+      border-color: rgba(99, 102, 241, 0.8);
+    }
+
+    button.secondary:active {
+      transform: translateY(0);
+      opacity: 0.95;
+    }
+
+    .hint { font-size: 0.75rem; color: #9ca3af; }
 
     .kbd {
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
@@ -241,6 +237,33 @@
       padding-right: 2px;
     }
 
+    /* Export row (Option A) */
+    .export-row {
+      margin-top: 6px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .export-row select {
+      flex: 1;
+      min-width: 180px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(51, 65, 85, 0.9);
+      background: #020617;
+      color: #e5e7eb;
+      font-size: 0.85rem;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .export-row select:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.6);
+    }
+
     details.month-block {
       border-radius: 10px;
       border: 1px solid rgba(31, 41, 55, 0.9);
@@ -248,9 +271,7 @@
       padding: 4px 8px 6px;
     }
 
-    details.month-block + details.month-block {
-      margin-top: 6px;
-    }
+    details.month-block + details.month-block { margin-top: 6px; }
 
     summary.month-summary {
       cursor: pointer;
@@ -264,9 +285,7 @@
       color: #9ca3af;
     }
 
-    summary.month-summary::-webkit-details-marker {
-      display: none;
-    }
+    summary.month-summary::-webkit-details-marker { display: none; }
 
     .month-summary-title::before {
       content: "▸";
@@ -276,14 +295,9 @@
       font-size: 0.7rem;
     }
 
-    details[open] > summary .month-summary-title::before {
-      transform: rotate(90deg);
-    }
+    details[open] > summary .month-summary-title::before { transform: rotate(90deg); }
 
-    .month-summary-count {
-      font-size: 0.75rem;
-      color: #6b7280;
-    }
+    .month-summary-count { font-size: 0.75rem; color: #6b7280; }
 
     .month-inner {
       margin-top: 4px;
@@ -310,9 +324,7 @@
       color: #d1d5db;
     }
 
-    summary.day-summary::-webkit-details-marker {
-      display: none;
-    }
+    summary.day-summary::-webkit-details-marker { display: none; }
 
     .day-summary-title::before {
       content: "▸";
@@ -322,14 +334,9 @@
       font-size: 0.7rem;
     }
 
-    details.day-block[open] > summary .day-summary-title::before {
-      transform: rotate(90deg);
-    }
+    details.day-block[open] > summary .day-summary-title::before { transform: rotate(90deg); }
 
-    .day-summary-count {
-      font-size: 0.75rem;
-      color: #9ca3af;
-    }
+    .day-summary-count { font-size: 0.75rem; color: #9ca3af; }
 
     .day-inner {
       margin-top: 2px;
@@ -355,10 +362,7 @@
       gap: 8px;
     }
 
-    .note-meta {
-      font-size: 0.75rem;
-      color: #9ca3af;
-    }
+    .note-meta { font-size: 0.75rem; color: #9ca3af; }
 
     .note-category-pill {
       font-size: 0.7rem;
@@ -380,11 +384,7 @@
       word-wrap: break-word;
     }
 
-    .empty {
-      font-size: 0.8rem;
-      color: #6b7280;
-      padding: 12px 4px;
-    }
+    .empty { font-size: 0.8rem; color: #6b7280; padding: 12px 4px; }
   </style>
 </head>
 <body>
@@ -405,10 +405,7 @@
         <h2>New note</h2>
 
         <label for="noteInput">Note</label>
-        <textarea
-          id="noteInput"
-          placeholder="Type anything you’d normally email yourself..."
-        ></textarea>
+        <textarea id="noteInput" placeholder="Type anything you’d normally email yourself..."></textarea>
 
         <div class="category-row">
           <label>Category (required)</label>
@@ -444,11 +441,9 @@
           <button id="saveButton">Save note</button>
           <div class="hint">
             Shortcut:
-            <span class="kbd">Ctrl</span> +
-            <span class="kbd">Enter</span>
+            <span class="kbd">Ctrl</span> + <span class="kbd">Enter</span>
             /
-            <span class="kbd">⌘</span> +
-            <span class="kbd">Enter</span>
+            <span class="kbd">⌘</span> + <span class="kbd">Enter</span>
           </div>
         </div>
 
@@ -459,10 +454,7 @@
         </h2>
 
         <label for="pastNoteInput">Note</label>
-        <textarea
-          id="pastNoteInput"
-          placeholder="Paste an old note here..."
-        ></textarea>
+        <textarea id="pastNoteInput" placeholder="Paste an old note here..."></textarea>
 
         <label for="pastNoteTime" style="margin-top: 6px;">Timestamp (past)</label>
         <input
@@ -480,15 +472,9 @@
             margin-top: 2px;
           "
         />
-        <div class="hint" style="margin-top: 4px;">
-          Use local time — it will be stored in ISO format.
-        </div>
 
         <div class="controls" style="margin-top: 6px;">
           <button id="savePastButton">Save past note</button>
-          <div class="hint">
-            Uses the category you’ve selected above.
-          </div>
         </div>
       </section>
 
@@ -505,6 +491,23 @@
             placeholder="Search text or category (goals, systems, mindset, relationships, todo, other)..."
           />
         </div>
+
+        <!-- OPTION A: Export under Search -->
+        <div class="export-row" aria-label="Export notes by tag">
+          <select id="exportTagSelect" title="Choose a tag to export">
+            <option value="" selected disabled>Choose a tag to export…</option>
+            <option value="goals">Goals</option>
+            <option value="systems">Systems</option>
+            <option value="mindset">Mindset</option>
+            <option value="relationships">Relationships</option>
+            <option value="todo">To-Do</option>
+            <option value="other">Other</option>
+          </select>
+          <button id="downloadTxtButton" class="secondary" title="Download .txt export">
+            Download .txt
+          </button>
+        </div>
+        <div id="exportHint" class="hint"></div>
 
         <div id="notesList" class="notes-list"></div>
       </section>
@@ -539,16 +542,12 @@
         if (tags.some(t => t.includes("todo") || t.includes("to-do") || t.includes("task"))) {
           return "todo";
         }
-
         return "other";
       }
 
       function loadNotes() {
         const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) {
-          notes = [];
-          return;
-        }
+        if (!raw) { notes = []; return; }
         try {
           const parsed = JSON.parse(raw);
           if (Array.isArray(parsed)) {
@@ -583,12 +582,8 @@
           const input = labelEl.querySelector("input[type='radio']");
           if (!input) return;
           input.addEventListener("change", () => {
-            container
-              .querySelectorAll(".category-pill")
-              .forEach(l => l.classList.remove("category-pill--active"));
-            if (input.checked) {
-              labelEl.classList.add("category-pill--active");
-            }
+            container.querySelectorAll(".category-pill").forEach(l => l.classList.remove("category-pill--active"));
+            if (input.checked) labelEl.classList.add("category-pill--active");
           });
         });
       }
@@ -650,10 +645,20 @@
       function formatTime(isoString) {
         const d = new Date(isoString);
         if (isNaN(d.getTime())) return "";
-        return d.toLocaleTimeString(undefined, {
-          hour: "2-digit",
-          minute: "2-digit"
-        });
+        return d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+      }
+
+      function formatGeneratedStamp() {
+        const d = new Date();
+        const date = d.toLocaleDateString(undefined, { year: "numeric", month: "2-digit", day: "2-digit" });
+        const time = d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+        return `${date} ${time}`;
+      }
+
+      function tagLabel(tag) {
+        if (!tag) return "";
+        if (tag === "todo") return "To-Do";
+        return tag.charAt(0).toUpperCase() + tag.slice(1);
       }
 
       function renderNotes(filterValue = "") {
@@ -686,16 +691,12 @@
           const monthKey = getMonthKey(d);
           const dayKey = getDayKey(d);
 
-          if (!structure[monthKey]) {
-            structure[monthKey] = {};
-          }
-          if (!structure[monthKey][dayKey]) {
-            structure[monthKey][dayKey] = [];
-          }
+          if (!structure[monthKey]) structure[monthKey] = {};
+          if (!structure[monthKey][dayKey]) structure[monthKey][dayKey] = [];
           structure[monthKey][dayKey].push(note);
         });
 
-        const monthKeys = Object.keys(structure).sort((a, b) => b.localeCompare(a));
+        const monthKeys = Object.keys(structure).sort((a, b) => b.localeCompare(a)); // newest first
 
         monthKeys.forEach(monthKey => {
           const monthDays = structure[monthKey];
@@ -713,11 +714,7 @@
 
           const countSpan = document.createElement("span");
           countSpan.className = "month-summary-count";
-
-          const monthCount = Object.values(monthDays).reduce(
-            (acc, arr) => acc + arr.length,
-            0
-          );
+          const monthCount = Object.values(monthDays).reduce((acc, arr) => acc + arr.length, 0);
           countSpan.textContent = `${monthCount} note${monthCount !== 1 ? "s" : ""}`;
 
           monthSummary.appendChild(titleSpan);
@@ -727,7 +724,7 @@
           const monthInner = document.createElement("div");
           monthInner.className = "month-inner";
 
-          const dayKeys = Object.keys(monthDays).sort((a, b) => b.localeCompare(a));
+          const dayKeys = Object.keys(monthDays).sort((a, b) => b.localeCompare(a)); // newest first
 
           dayKeys.forEach(dayKey => {
             const dayNotes = monthDays[dayKey];
@@ -754,11 +751,7 @@
             const dayInner = document.createElement("div");
             dayInner.className = "day-inner";
 
-            dayNotes.sort((a, b) => {
-              const ta = new Date(a.createdAt).getTime();
-              const tb = new Date(b.createdAt).getTime();
-              return tb - ta;
-            });
+            dayNotes.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
             dayNotes.forEach(note => {
               const card = document.createElement("article");
@@ -796,6 +789,79 @@
         });
       }
 
+      // Build text export for a specific tag, consistent with UI order (newest -> oldest)
+      function buildTxtExportForTag(tag) {
+        const safeTag = (tag || "").toLowerCase().trim();
+        if (!CATEGORY_VALUES.includes(safeTag)) return "";
+
+        const tagNotes = notes.filter(n => (n.category || "").toLowerCase() === safeTag);
+        if (!tagNotes.length) return "";
+
+        // Structure: month -> day -> notes
+        const structure = {};
+        tagNotes.forEach(note => {
+          const d = new Date(note.createdAt);
+          const monthKey = getMonthKey(d);
+          const dayKey = getDayKey(d);
+
+          if (!structure[monthKey]) structure[monthKey] = {};
+          if (!structure[monthKey][dayKey]) structure[monthKey][dayKey] = [];
+          structure[monthKey][dayKey].push(note);
+        });
+
+        const lines = [];
+        lines.push(`SLIPBOX EXPORT — TAG: ${tagLabel(safeTag)}`);
+        lines.push(`Generated: ${formatGeneratedStamp()}`);
+        lines.push(""); // blank line
+
+        const monthKeys = Object.keys(structure).sort((a, b) => b.localeCompare(a)); // newest month first
+
+        monthKeys.forEach((monthKey, mi) => {
+          lines.push(getMonthLabelFromKey(monthKey).toUpperCase());
+          const dayKeys = Object.keys(structure[monthKey]).sort((a, b) => b.localeCompare(a)); // newest day first
+
+          dayKeys.forEach(dayKey => {
+            lines.push(`— ${getDayLabelFromKey(dayKey)} —`);
+
+            const dayNotes = structure[monthKey][dayKey].slice().sort((a, b) => {
+              return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+            });
+
+            dayNotes.forEach(note => {
+              const time = formatTime(note.createdAt);
+              lines.push(`[${time}] ${note.text}`);
+              lines.push(""); // spacing between notes
+            });
+          });
+
+          if (mi !== monthKeys.length - 1) lines.push(""); // spacing between months
+        });
+
+        return lines.join("\n").replace(/\n{3,}/g, "\n\n"); // avoid huge gaps
+      }
+
+      function downloadTextFile(filename, text) {
+        const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+
+        URL.revokeObjectURL(url);
+      }
+
+      function safeFileStamp() {
+        const d = new Date();
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        return `${y}-${m}-${day}`;
+      }
+
       function setup() {
         const noteInput = document.getElementById("noteInput");
         const saveButton = document.getElementById("saveButton");
@@ -804,6 +870,10 @@
         const pastNoteInput = document.getElementById("pastNoteInput");
         const pastNoteTimeInput = document.getElementById("pastNoteTime");
         const savePastButton = document.getElementById("savePastButton");
+
+        const exportTagSelect = document.getElementById("exportTagSelect");
+        const downloadTxtButton = document.getElementById("downloadTxtButton");
+        const exportHint = document.getElementById("exportHint");
 
         attachCategoryPillState();
 
@@ -827,37 +897,69 @@
           }
         });
 
-        if (savePastButton) {
-          savePastButton.addEventListener("click", () => {
-            const text = pastNoteInput.value.trim();
-            const category = getSelectedCategory();
-            const timestamp = (pastNoteTimeInput.value || "").trim();
+        savePastButton.addEventListener("click", () => {
+          const text = pastNoteInput.value.trim();
+          const category = getSelectedCategory();
+          const timestamp = (pastNoteTimeInput.value || "").trim();
 
-            if (!text) return;
+          if (!text) return;
 
-            if (!category) {
-              alert("Pick a category before saving a past note.");
-              return;
-            }
+          if (!category) {
+            alert("Pick a category before saving a past note.");
+            return;
+          }
 
-            if (!timestamp) {
-              alert("Set a timestamp for the past note.");
-              return;
-            }
+          if (!timestamp) {
+            alert("Set a timestamp for the past note.");
+            return;
+          }
 
-            createNote(text, category, timestamp);
-
-            pastNoteInput.value = "";
-            renderNotes(searchInput.value);
-          });
-        }
+          createNote(text, category, timestamp);
+          pastNoteInput.value = "";
+          renderNotes(searchInput.value);
+        });
 
         searchInput.addEventListener("input", () => {
           renderNotes(searchInput.value);
         });
 
+        // Export UI logic
+        function refreshExportHint() {
+          const tag = (exportTagSelect.value || "").trim();
+          if (!tag) {
+            exportHint.textContent = "";
+            return;
+          }
+          const count = notes.filter(n => (n.category || "").toLowerCase() === tag).length;
+          exportHint.textContent = count
+            ? `${count} note${count !== 1 ? "s" : ""} in ${tagLabel(tag)}`
+            : `No notes in ${tagLabel(tag)} yet`;
+        }
+
+        exportTagSelect.addEventListener("change", () => {
+          refreshExportHint();
+        });
+
+        downloadTxtButton.addEventListener("click", () => {
+          const tag = (exportTagSelect.value || "").trim();
+          if (!tag) {
+            alert("Choose a tag to export first.");
+            return;
+          }
+
+          const txt = buildTxtExportForTag(tag);
+          if (!txt) {
+            alert(`No notes found for ${tagLabel(tag)}.`);
+            return;
+          }
+
+          const filename = `slipbox_${tag}_export_${safeFileStamp()}.txt`;
+          downloadTextFile(filename, txt);
+        });
+
         loadNotes();
         renderNotes();
+        refreshExportHint();
       }
 
       window.addEventListener("DOMContentLoaded", setup);
