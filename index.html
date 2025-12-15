@@ -213,6 +213,22 @@
       opacity: 0.95;
     }
 
+    button.danger {
+      background: rgba(2, 6, 23, 1);
+      border: 1px solid rgba(239, 68, 68, 0.75);
+      box-shadow: none;
+      color: #fecaca;
+    }
+    button.danger:hover {
+      transform: translateY(-1px);
+      box-shadow: none;
+      border-color: rgba(239, 68, 68, 1);
+    }
+    button.danger:active {
+      transform: translateY(0);
+      opacity: 0.95;
+    }
+
     .hint { font-size: 0.75rem; color: #9ca3af; }
 
     .kbd {
@@ -408,6 +424,13 @@
       box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.45);
     }
 
+    .delete-note-btn {
+      padding: 4px 10px;
+      font-size: 0.75rem;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
     .note-text {
       margin: 0;
       font-size: 0.9rem;
@@ -422,7 +445,7 @@
   <div class="app">
     <header>
       <div>
-        <div class="title">notebank</div>
+        <div class="title">notebank !</div>
         <div class="subtitle">A minimal inbox for your notes</div>
       </div>
       <div class="subtitle">Stored locally · No account · No sync (yet)</div>
@@ -438,9 +461,7 @@
 
         <div class="category-row">
           <label>Category (required)</label>
-          <div class="category-options" id="categoryOptions">
-            <!-- pills injected by JS -->
-          </div>
+          <div class="category-options" id="categoryOptions"></div>
 
           <div id="tagHelp" class="tag-help" aria-live="polite">
             <strong>Tag guidance</strong>
@@ -503,13 +524,16 @@
           />
         </div>
 
+        <!-- Export: tag export + Export All -->
         <div class="export-row" aria-label="Export notes">
           <select id="exportTagSelect" title="Choose a tag to export">
-            <option value="" selected disabled>Choose export…</option>
-            <!-- options injected by JS -->
+            <option value="" selected disabled>Export by tag…</option>
           </select>
-          <button id="downloadTxtButton" class="secondary" title="Download .txt export">
-            Download .txt
+          <button id="downloadTagTxtButton" class="secondary" title="Download tag .txt export">
+            Download tag .txt
+          </button>
+          <button id="downloadAllTxtButton" class="secondary" title="Download all notes as .txt">
+            Export all .txt
           </button>
         </div>
         <div id="exportHint" class="hint"></div>
@@ -529,7 +553,7 @@
         "July","August","September","October","November","December"
       ];
 
-      // ✅ New category set: removed "other", added 4 new ones, kept the rest
+      // Categories (removed "other")
       const CATEGORIES = [
         { value: "goals", label: "Goals", help: "Outcomes you want. Targets, milestones, who you’re trying to become." },
         { value: "systems", label: "Systems", help: "How you operate. Routines, rules, checklists, frameworks, processes." },
@@ -545,10 +569,8 @@
       const CATEGORY_VALUES = CATEGORIES.map(c => c.value);
 
       function tagLabel(tag) {
-        if (!tag) return "";
-        if (tag === "__all__") return "All";
         const found = CATEGORIES.find(c => c.value === tag);
-        return found ? found.label : tag;
+        return found ? found.label : (tag || "");
       }
 
       function tagHelpText(tag) {
@@ -560,10 +582,9 @@
         const c = (rawCategory || "").toLowerCase().trim();
         if (CATEGORY_VALUES.includes(c)) return c;
 
-        // Old data cleanup: map "other" into random_thoughts (so you don’t lose anything)
+        // migrate old "other" -> random_thoughts
         if (c === "other") return "random_thoughts";
 
-        // If unknown category found, default to random_thoughts (no data loss)
         return "random_thoughts";
       }
 
@@ -628,6 +649,13 @@
         saveNotes();
       }
 
+      function deleteNote(noteId) {
+        const idx = notes.findIndex(n => String(n.id) === String(noteId));
+        if (idx === -1) return;
+        notes.splice(idx, 1);
+        saveNotes();
+      }
+
       function getMonthKey(d) {
         if (!(d instanceof Date) || isNaN(d.getTime())) return "unknown";
         const y = d.getFullYear();
@@ -683,14 +711,12 @@
       function downloadTextFile(filename, text) {
         const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
         const url = URL.createObjectURL(blob);
-
         const a = document.createElement("a");
         a.href = url;
         a.download = filename;
         document.body.appendChild(a);
         a.click();
         a.remove();
-
         URL.revokeObjectURL(url);
       }
 
@@ -708,23 +734,23 @@
         return structure;
       }
 
-      function buildTxtExport(selection) {
-        const sel = (selection || "").toLowerCase().trim();
+      function buildTxtExportAll() {
+        if (!notes.length) return "";
+        return buildTxtFromNotes(notes.slice(), { includeTagOnLine: true, title: "ALL NOTES" });
+      }
 
-        let exportNotes = [];
-        if (sel === "__all__") {
-          exportNotes = notes.slice();
-        } else if (CATEGORY_VALUES.includes(sel)) {
-          exportNotes = notes.filter(n => (n.category || "").toLowerCase() === sel);
-        } else {
-          return "";
-        }
+      function buildTxtExportTag(tag) {
+        const t = (tag || "").toLowerCase().trim();
+        if (!CATEGORY_VALUES.includes(t)) return "";
+        const tagNotes = notes.filter(n => (n.category || "").toLowerCase() === t);
+        if (!tagNotes.length) return "";
+        return buildTxtFromNotes(tagNotes, { includeTagOnLine: false, title: `TAG: ${tagLabel(t)}` });
+      }
 
-        if (!exportNotes.length) return "";
-
-        const structure = buildStructureFromNotes(exportNotes);
+      function buildTxtFromNotes(noteList, { includeTagOnLine, title }) {
+        const structure = buildStructureFromNotes(noteList);
         const lines = [];
-        lines.push(`SLIPBOX EXPORT — ${sel === "__all__" ? "ALL NOTES" : `TAG: ${tagLabel(sel)}`}`);
+        lines.push(`SLIPBOX EXPORT — ${title}`);
         lines.push(`Generated: ${formatGeneratedStamp()}`);
         lines.push("");
 
@@ -742,7 +768,7 @@
 
             dayNotes.forEach(note => {
               const time = formatTime(note.createdAt);
-              if (sel === "__all__") {
+              if (includeTagOnLine) {
                 lines.push(`[${time}] (${tagLabel(note.category).toUpperCase()}) ${note.text}`);
               } else {
                 lines.push(`[${time}] ${note.text}`);
@@ -871,7 +897,22 @@
                 refreshExportHint();
               });
 
+              const delBtn = document.createElement("button");
+              delBtn.className = "danger delete-note-btn";
+              delBtn.type = "button";
+              delBtn.textContent = "Delete";
+              delBtn.title = "Delete this note";
+              delBtn.addEventListener("click", () => {
+                const ok = confirm("Delete this note? This can’t be undone.");
+                if (!ok) return;
+                deleteNote(note.id);
+                renderNotes(document.getElementById("searchInput").value);
+                refreshExportHint();
+              });
+
               tagWrap.appendChild(select);
+              tagWrap.appendChild(delBtn);
+
               headerRow.appendChild(meta);
               headerRow.appendChild(tagWrap);
 
@@ -893,7 +934,6 @@
         });
       }
 
-      // UI build: category pills + export options
       function buildCategoryUI() {
         const container = document.getElementById("categoryOptions");
         container.innerHTML = "";
@@ -906,8 +946,6 @@
           input.type = "radio";
           input.name = "category";
           input.value = cat.value;
-
-          // default-select Goals for convenience
           if (idx === 0) input.checked = true;
 
           const span = document.createElement("span");
@@ -918,7 +956,6 @@
           container.appendChild(label);
         });
 
-        // active styling + help text hook
         const helpBox = document.getElementById("tagHelp");
 
         function syncActiveAndHelp() {
@@ -926,7 +963,6 @@
           const val = checked ? checked.value : "";
           container.querySelectorAll(".category-pill").forEach(l => l.classList.remove("category-pill--active"));
           if (checked) checked.closest(".category-pill")?.classList.add("category-pill--active");
-
           helpBox.innerHTML = `<strong>Tag guidance</strong>${tagHelpText(val)}`;
         }
 
@@ -937,7 +973,7 @@
         syncActiveAndHelp();
       }
 
-      function buildExportOptions() {
+      function buildExportTagOptions() {
         const exportSelect = document.getElementById("exportTagSelect");
         exportSelect.innerHTML = "";
 
@@ -945,13 +981,8 @@
         first.value = "";
         first.disabled = true;
         first.selected = true;
-        first.textContent = "Choose export…";
+        first.textContent = "Export by tag…";
         exportSelect.appendChild(first);
-
-        const allOpt = document.createElement("option");
-        allOpt.value = "__all__";
-        allOpt.textContent = "All";
-        exportSelect.appendChild(allOpt);
 
         CATEGORIES.forEach(cat => {
           const opt = document.createElement("option");
@@ -961,7 +992,6 @@
         });
       }
 
-      // Export hint updater (must be global-ish for tag-change rerender)
       let refreshExportHint = function () {};
 
       function setup() {
@@ -974,11 +1004,12 @@
         const savePastButton = document.getElementById("savePastButton");
 
         const exportTagSelect = document.getElementById("exportTagSelect");
-        const downloadTxtButton = document.getElementById("downloadTxtButton");
+        const downloadTagTxtButton = document.getElementById("downloadTagTxtButton");
+        const downloadAllTxtButton = document.getElementById("downloadAllTxtButton");
         const exportHint = document.getElementById("exportHint");
 
         buildCategoryUI();
-        buildExportOptions();
+        buildExportTagOptions();
 
         saveButton.addEventListener("click", () => {
           const text = noteInput.value.trim();
@@ -1028,50 +1059,46 @@
 
         refreshExportHint = function () {
           const sel = (exportTagSelect.value || "").trim();
-          if (!sel) {
-            exportHint.textContent = "";
-            return;
-          }
+          const total = notes.length;
 
-          if (sel === "__all__") {
-            const count = notes.length;
-            exportHint.textContent = count ? `${count} note${count !== 1 ? "s" : ""} total` : "No notes yet";
+          if (!sel) {
+            exportHint.textContent = total ? `${total} note${total !== 1 ? "s" : ""} total` : "No notes yet";
             return;
           }
 
           const count = notes.filter(n => (n.category || "").toLowerCase() === sel).length;
-          exportHint.textContent = count
-            ? `${count} note${count !== 1 ? "s" : ""} in ${tagLabel(sel)}`
-            : `No notes in ${tagLabel(sel)} yet`;
+          exportHint.textContent = `${total} total · ${count} in ${tagLabel(sel)}`;
         };
 
-        exportTagSelect.addEventListener("change", () => {
-          refreshExportHint();
-        });
+        exportTagSelect.addEventListener("change", refreshExportHint);
 
-        downloadTxtButton.addEventListener("click", () => {
+        downloadTagTxtButton.addEventListener("click", () => {
           const sel = (exportTagSelect.value || "").trim();
           if (!sel) {
-            alert("Choose an export option first.");
+            alert("Choose a tag to export first.");
             return;
           }
-
-          const txt = buildTxtExport(sel);
+          const txt = buildTxtExportTag(sel);
           if (!txt) {
-            alert(sel === "__all__" ? "No notes to export." : `No notes found for ${tagLabel(sel)}.`);
+            alert(`No notes found for ${tagLabel(sel)}.`);
             return;
           }
+          const filename = `slipbox_${sel}_export_${safeFileStamp()}.txt`;
+          downloadTextFile(filename, txt);
+        });
 
-          const filename =
-            sel === "__all__"
-              ? `slipbox_all_export_${safeFileStamp()}.txt`
-              : `slipbox_${sel}_export_${safeFileStamp()}.txt`;
-
+        downloadAllTxtButton.addEventListener("click", () => {
+          const txt = buildTxtExportAll();
+          if (!txt) {
+            alert("No notes to export.");
+            return;
+          }
+          const filename = `slipbox_all_export_${safeFileStamp()}.txt`;
           downloadTextFile(filename, txt);
         });
 
         loadNotes();
-        // one-time migration: convert old categories and save back
+        // one-time migration save back (handles old "other")
         saveNotes();
 
         renderNotes();
