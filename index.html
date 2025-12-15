@@ -142,6 +142,26 @@
       background: rgba(79, 70, 229, 0.15);
     }
 
+    .tag-help {
+      margin-top: 6px;
+      padding: 10px 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(51, 65, 85, 0.9);
+      background: rgba(2, 6, 23, 0.85);
+      color: #cbd5f5;
+      font-size: 0.82rem;
+      line-height: 1.35;
+    }
+
+    .tag-help strong {
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-size: 0.75rem;
+      color: #9ca3af;
+      display: block;
+      margin-bottom: 6px;
+    }
+
     .controls {
       display: flex;
       justify-content: space-between;
@@ -237,7 +257,6 @@
       padding-right: 2px;
     }
 
-    /* Export row (Option A) */
     .export-row {
       margin-top: 6px;
       display: flex;
@@ -352,7 +371,7 @@
       border: 1px solid rgba(55, 65, 81, 0.9);
       display: flex;
       flex-direction: column;
-      gap: 2px;
+      gap: 6px;
     }
 
     .note-header-row {
@@ -364,21 +383,33 @@
 
     .note-meta { font-size: 0.75rem; color: #9ca3af; }
 
-    .note-category-pill {
-      font-size: 0.7rem;
-      padding: 2px 8px;
+    .note-tag-edit {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: auto;
+    }
+
+    .note-tag-select {
+      padding: 4px 10px;
       border-radius: 999px;
-      background: rgba(30, 64, 175, 0.85);
-      border: 1px solid rgba(96, 165, 250, 0.7);
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      background: #020617;
       color: #e5e7eb;
-      white-space: nowrap;
+      font-size: 0.75rem;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.04em;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .note-tag-select:focus {
+      border-color: rgba(99, 102, 241, 0.9);
+      box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.45);
     }
 
     .note-text {
       margin: 0;
-      margin-top: 2px;
       font-size: 0.9rem;
       white-space: pre-wrap;
       word-wrap: break-word;
@@ -391,12 +422,10 @@
   <div class="app">
     <header>
       <div>
-        <div class="title">Slipbox</div>
+        <div class="title">notebank</div>
         <div class="subtitle">A minimal inbox for your notes</div>
       </div>
-      <div class="subtitle">
-        Stored locally · No account · No sync (yet)
-      </div>
+      <div class="subtitle">Stored locally · No account · No sync (yet)</div>
     </header>
 
     <main class="layout">
@@ -410,30 +439,12 @@
         <div class="category-row">
           <label>Category (required)</label>
           <div class="category-options" id="categoryOptions">
-            <label class="category-pill">
-              <input type="radio" name="category" value="goals" />
-              <span>Goals</span>
-            </label>
-            <label class="category-pill">
-              <input type="radio" name="category" value="systems" />
-              <span>Systems</span>
-            </label>
-            <label class="category-pill">
-              <input type="radio" name="category" value="mindset" />
-              <span>Mindset</span>
-            </label>
-            <label class="category-pill">
-              <input type="radio" name="category" value="relationships" />
-              <span>Relationships</span>
-            </label>
-            <label class="category-pill">
-              <input type="radio" name="category" value="todo" />
-              <span>To-Do</span>
-            </label>
-            <label class="category-pill">
-              <input type="radio" name="category" value="other" />
-              <span>Other</span>
-            </label>
+            <!-- pills injected by JS -->
+          </div>
+
+          <div id="tagHelp" class="tag-help" aria-live="polite">
+            <strong>Tag guidance</strong>
+            Pick a tag to see what belongs there.
           </div>
         </div>
 
@@ -488,20 +499,14 @@
             id="searchInput"
             class="search-input"
             type="text"
-            placeholder="Search text or category (goals, systems, mindset, relationships, todo, other)..."
+            placeholder="Search text or category..."
           />
         </div>
 
-        <!-- OPTION A: Export under Search -->
-        <div class="export-row" aria-label="Export notes by tag">
+        <div class="export-row" aria-label="Export notes">
           <select id="exportTagSelect" title="Choose a tag to export">
-            <option value="" selected disabled>Choose a tag to export…</option>
-            <option value="goals">Goals</option>
-            <option value="systems">Systems</option>
-            <option value="mindset">Mindset</option>
-            <option value="relationships">Relationships</option>
-            <option value="todo">To-Do</option>
-            <option value="other">Other</option>
+            <option value="" selected disabled>Choose export…</option>
+            <!-- options injected by JS -->
           </select>
           <button id="downloadTxtButton" class="secondary" title="Download .txt export">
             Download .txt
@@ -519,30 +524,47 @@
       const STORAGE_KEY = "slipboxNotes";
       let notes = [];
 
-      const CATEGORY_VALUES = ["goals", "systems", "mindset", "relationships", "todo", "other"];
       const MONTH_NAMES = [
         "January","February","March","April","May","June",
         "July","August","September","October","November","December"
       ];
 
-      function normalizeCategory(rawCategory, rawTags) {
+      // ✅ New category set: removed "other", added 4 new ones, kept the rest
+      const CATEGORIES = [
+        { value: "goals", label: "Goals", help: "Outcomes you want. Targets, milestones, who you’re trying to become." },
+        { value: "systems", label: "Systems", help: "How you operate. Routines, rules, checklists, frameworks, processes." },
+        { value: "mindset", label: "Mindset", help: "Inner world. Emotions, self-awareness, patterns, psychology, reflections." },
+        { value: "relationships", label: "Relationships", help: "People + how you handle them. Communication, boundaries, family/friends/dating." },
+        { value: "todo", label: "To-Do", help: "Action items. Tasks you can complete/check off. If it’s executable, it goes here." },
+        { value: "trading", label: "Trading", help: "Trading-specific notes. Setups, rules, journal notes, market observations, trade psychology tied to execution." },
+        { value: "crypto", label: "Crypto", help: "Crypto-specific notes. Thesis, security/wallets, DCA plans, watchlists, exchange/custody notes." },
+        { value: "project_ideas", label: "Project Ideas", help: "Buildable ideas. App features, business/content concepts, product/brand ideas, experiments you might develop." },
+        { value: "random_thoughts", label: "Random Thoughts & Ideas", help: "Loose captures. Sparks, curiosities, half-formed ideas, quotes, quick observations not yet a project or task." }
+      ];
+
+      const CATEGORY_VALUES = CATEGORIES.map(c => c.value);
+
+      function tagLabel(tag) {
+        if (!tag) return "";
+        if (tag === "__all__") return "All";
+        const found = CATEGORIES.find(c => c.value === tag);
+        return found ? found.label : tag;
+      }
+
+      function tagHelpText(tag) {
+        const found = CATEGORIES.find(c => c.value === tag);
+        return found ? found.help : "Pick a tag to see what belongs there.";
+      }
+
+      function normalizeCategory(rawCategory) {
         const c = (rawCategory || "").toLowerCase().trim();
         if (CATEGORY_VALUES.includes(c)) return c;
 
-        const tags = Array.isArray(rawTags) ? rawTags.map(t => String(t).toLowerCase()) : [];
+        // Old data cleanup: map "other" into random_thoughts (so you don’t lose anything)
+        if (c === "other") return "random_thoughts";
 
-        if (tags.some(t => t.includes("goal"))) return "goals";
-        if (tags.some(t => t.includes("system") || t.includes("routine"))) return "systems";
-        if (tags.some(t => t.includes("mindset") || t.includes("self") || t.includes("mood") || t.includes("feel"))) {
-          return "mindset";
-        }
-        if (tags.some(t => t.includes("family") || t.includes("friend") || t.includes("relationship"))) {
-          return "relationships";
-        }
-        if (tags.some(t => t.includes("todo") || t.includes("to-do") || t.includes("task"))) {
-          return "todo";
-        }
-        return "other";
+        // If unknown category found, default to random_thoughts (no data loss)
+        return "random_thoughts";
       }
 
       function loadNotes() {
@@ -555,7 +577,7 @@
               id: n.id,
               text: n.text || "",
               createdAt: n.createdAt || new Date().toISOString(),
-              category: normalizeCategory(n.category, n.tags)
+              category: normalizeCategory(n.category)
             }));
           } else {
             notes = [];
@@ -573,19 +595,6 @@
       function getSelectedCategory() {
         const checked = document.querySelector('input[name="category"]:checked');
         return checked ? checked.value : "";
-      }
-
-      function attachCategoryPillState() {
-        const container = document.getElementById("categoryOptions");
-        if (!container) return;
-        container.querySelectorAll(".category-pill").forEach(labelEl => {
-          const input = labelEl.querySelector("input[type='radio']");
-          if (!input) return;
-          input.addEventListener("change", () => {
-            container.querySelectorAll(".category-pill").forEach(l => l.classList.remove("category-pill--active"));
-            if (input.checked) labelEl.classList.add("category-pill--active");
-          });
-        });
       }
 
       function createNote(text, category, createdAtISO) {
@@ -608,6 +617,14 @@
         };
 
         notes.unshift(note);
+        saveNotes();
+      }
+
+      function updateNoteCategory(noteId, newCategory) {
+        const c = normalizeCategory(newCategory);
+        const idx = notes.findIndex(n => String(n.id) === String(noteId));
+        if (idx === -1) return;
+        notes[idx].category = c;
         saveNotes();
       }
 
@@ -655,10 +672,89 @@
         return `${date} ${time}`;
       }
 
-      function tagLabel(tag) {
-        if (!tag) return "";
-        if (tag === "todo") return "To-Do";
-        return tag.charAt(0).toUpperCase() + tag.slice(1);
+      function safeFileStamp() {
+        const d = new Date();
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        return `${y}-${m}-${day}`;
+      }
+
+      function downloadTextFile(filename, text) {
+        const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+
+        URL.revokeObjectURL(url);
+      }
+
+      function buildStructureFromNotes(noteArray) {
+        const structure = {};
+        noteArray.forEach(note => {
+          const d = new Date(note.createdAt);
+          const monthKey = getMonthKey(d);
+          const dayKey = getDayKey(d);
+
+          if (!structure[monthKey]) structure[monthKey] = {};
+          if (!structure[monthKey][dayKey]) structure[monthKey][dayKey] = [];
+          structure[monthKey][dayKey].push(note);
+        });
+        return structure;
+      }
+
+      function buildTxtExport(selection) {
+        const sel = (selection || "").toLowerCase().trim();
+
+        let exportNotes = [];
+        if (sel === "__all__") {
+          exportNotes = notes.slice();
+        } else if (CATEGORY_VALUES.includes(sel)) {
+          exportNotes = notes.filter(n => (n.category || "").toLowerCase() === sel);
+        } else {
+          return "";
+        }
+
+        if (!exportNotes.length) return "";
+
+        const structure = buildStructureFromNotes(exportNotes);
+        const lines = [];
+        lines.push(`SLIPBOX EXPORT — ${sel === "__all__" ? "ALL NOTES" : `TAG: ${tagLabel(sel)}`}`);
+        lines.push(`Generated: ${formatGeneratedStamp()}`);
+        lines.push("");
+
+        const monthKeys = Object.keys(structure).sort((a, b) => b.localeCompare(a));
+        monthKeys.forEach((monthKey, mi) => {
+          lines.push(getMonthLabelFromKey(monthKey).toUpperCase());
+
+          const dayKeys = Object.keys(structure[monthKey]).sort((a, b) => b.localeCompare(a));
+          dayKeys.forEach(dayKey => {
+            lines.push(`— ${getDayLabelFromKey(dayKey)} —`);
+
+            const dayNotes = structure[monthKey][dayKey].slice().sort((a, b) => {
+              return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+            });
+
+            dayNotes.forEach(note => {
+              const time = formatTime(note.createdAt);
+              if (sel === "__all__") {
+                lines.push(`[${time}] (${tagLabel(note.category).toUpperCase()}) ${note.text}`);
+              } else {
+                lines.push(`[${time}] ${note.text}`);
+              }
+              lines.push("");
+            });
+          });
+
+          if (mi !== monthKeys.length - 1) lines.push("");
+        });
+
+        return lines.join("\n").replace(/\n{3,}/g, "\n\n");
       }
 
       function renderNotes(filterValue = "") {
@@ -669,7 +765,8 @@
           ? notes.filter(n => {
               const textMatch = (n.text || "").toLowerCase().includes(query);
               const catMatch = (n.category || "").toLowerCase().includes(query);
-              return textMatch || catMatch;
+              const labelMatch = (tagLabel(n.category) || "").toLowerCase().includes(query);
+              return textMatch || catMatch || labelMatch;
             })
           : notes;
 
@@ -678,25 +775,13 @@
         if (!filtered.length) {
           const empty = document.createElement("p");
           empty.className = "empty";
-          empty.textContent = query
-            ? "No notes match your search."
-            : "No notes yet. Type on the left and save your first one.";
+          empty.textContent = query ? "No notes match your search." : "No notes yet. Type on the left and save your first one.";
           listEl.appendChild(empty);
           return;
         }
 
-        const structure = {};
-        filtered.forEach(note => {
-          const d = new Date(note.createdAt);
-          const monthKey = getMonthKey(d);
-          const dayKey = getDayKey(d);
-
-          if (!structure[monthKey]) structure[monthKey] = {};
-          if (!structure[monthKey][dayKey]) structure[monthKey][dayKey] = [];
-          structure[monthKey][dayKey].push(note);
-        });
-
-        const monthKeys = Object.keys(structure).sort((a, b) => b.localeCompare(a)); // newest first
+        const structure = buildStructureFromNotes(filtered);
+        const monthKeys = Object.keys(structure).sort((a, b) => b.localeCompare(a));
 
         monthKeys.forEach(monthKey => {
           const monthDays = structure[monthKey];
@@ -724,8 +809,7 @@
           const monthInner = document.createElement("div");
           monthInner.className = "month-inner";
 
-          const dayKeys = Object.keys(monthDays).sort((a, b) => b.localeCompare(a)); // newest first
-
+          const dayKeys = Object.keys(monthDays).sort((a, b) => b.localeCompare(a));
           dayKeys.forEach(dayKey => {
             const dayNotes = monthDays[dayKey];
 
@@ -751,9 +835,11 @@
             const dayInner = document.createElement("div");
             dayInner.className = "day-inner";
 
-            dayNotes.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+            const sortedDayNotes = dayNotes.slice().sort((a, b) => {
+              return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+            });
 
-            dayNotes.forEach(note => {
+            sortedDayNotes.forEach(note => {
               const card = document.createElement("article");
               card.className = "note";
 
@@ -764,12 +850,30 @@
               meta.className = "note-meta";
               meta.textContent = formatTime(note.createdAt);
 
-              const catPill = document.createElement("span");
-              catPill.className = "note-category-pill";
-              catPill.textContent = (note.category || "other").toUpperCase();
+              const tagWrap = document.createElement("div");
+              tagWrap.className = "note-tag-edit";
 
+              const select = document.createElement("select");
+              select.className = "note-tag-select";
+              select.setAttribute("aria-label", "Change tag");
+
+              CATEGORY_VALUES.forEach(v => {
+                const opt = document.createElement("option");
+                opt.value = v;
+                opt.textContent = tagLabel(v).toUpperCase();
+                if ((note.category || "").toLowerCase() === v) opt.selected = true;
+                select.appendChild(opt);
+              });
+
+              select.addEventListener("change", () => {
+                updateNoteCategory(note.id, select.value);
+                renderNotes(document.getElementById("searchInput").value);
+                refreshExportHint();
+              });
+
+              tagWrap.appendChild(select);
               headerRow.appendChild(meta);
-              headerRow.appendChild(catPill);
+              headerRow.appendChild(tagWrap);
 
               const text = document.createElement("p");
               text.className = "note-text";
@@ -789,78 +893,76 @@
         });
       }
 
-      // Build text export for a specific tag, consistent with UI order (newest -> oldest)
-      function buildTxtExportForTag(tag) {
-        const safeTag = (tag || "").toLowerCase().trim();
-        if (!CATEGORY_VALUES.includes(safeTag)) return "";
+      // UI build: category pills + export options
+      function buildCategoryUI() {
+        const container = document.getElementById("categoryOptions");
+        container.innerHTML = "";
 
-        const tagNotes = notes.filter(n => (n.category || "").toLowerCase() === safeTag);
-        if (!tagNotes.length) return "";
+        CATEGORIES.forEach((cat, idx) => {
+          const label = document.createElement("label");
+          label.className = "category-pill";
 
-        // Structure: month -> day -> notes
-        const structure = {};
-        tagNotes.forEach(note => {
-          const d = new Date(note.createdAt);
-          const monthKey = getMonthKey(d);
-          const dayKey = getDayKey(d);
+          const input = document.createElement("input");
+          input.type = "radio";
+          input.name = "category";
+          input.value = cat.value;
 
-          if (!structure[monthKey]) structure[monthKey] = {};
-          if (!structure[monthKey][dayKey]) structure[monthKey][dayKey] = [];
-          structure[monthKey][dayKey].push(note);
+          // default-select Goals for convenience
+          if (idx === 0) input.checked = true;
+
+          const span = document.createElement("span");
+          span.textContent = cat.label;
+
+          label.appendChild(input);
+          label.appendChild(span);
+          container.appendChild(label);
         });
 
-        const lines = [];
-        lines.push(`SLIPBOX EXPORT — TAG: ${tagLabel(safeTag)}`);
-        lines.push(`Generated: ${formatGeneratedStamp()}`);
-        lines.push(""); // blank line
+        // active styling + help text hook
+        const helpBox = document.getElementById("tagHelp");
 
-        const monthKeys = Object.keys(structure).sort((a, b) => b.localeCompare(a)); // newest month first
+        function syncActiveAndHelp() {
+          const checked = document.querySelector('input[name="category"]:checked');
+          const val = checked ? checked.value : "";
+          container.querySelectorAll(".category-pill").forEach(l => l.classList.remove("category-pill--active"));
+          if (checked) checked.closest(".category-pill")?.classList.add("category-pill--active");
 
-        monthKeys.forEach((monthKey, mi) => {
-          lines.push(getMonthLabelFromKey(monthKey).toUpperCase());
-          const dayKeys = Object.keys(structure[monthKey]).sort((a, b) => b.localeCompare(a)); // newest day first
+          helpBox.innerHTML = `<strong>Tag guidance</strong>${tagHelpText(val)}`;
+        }
 
-          dayKeys.forEach(dayKey => {
-            lines.push(`— ${getDayLabelFromKey(dayKey)} —`);
-
-            const dayNotes = structure[monthKey][dayKey].slice().sort((a, b) => {
-              return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-            });
-
-            dayNotes.forEach(note => {
-              const time = formatTime(note.createdAt);
-              lines.push(`[${time}] ${note.text}`);
-              lines.push(""); // spacing between notes
-            });
-          });
-
-          if (mi !== monthKeys.length - 1) lines.push(""); // spacing between months
+        container.querySelectorAll("input[type='radio']").forEach(input => {
+          input.addEventListener("change", syncActiveAndHelp);
         });
 
-        return lines.join("\n").replace(/\n{3,}/g, "\n\n"); // avoid huge gaps
+        syncActiveAndHelp();
       }
 
-      function downloadTextFile(filename, text) {
-        const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
-        const url = URL.createObjectURL(blob);
+      function buildExportOptions() {
+        const exportSelect = document.getElementById("exportTagSelect");
+        exportSelect.innerHTML = "";
 
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
+        const first = document.createElement("option");
+        first.value = "";
+        first.disabled = true;
+        first.selected = true;
+        first.textContent = "Choose export…";
+        exportSelect.appendChild(first);
 
-        URL.revokeObjectURL(url);
+        const allOpt = document.createElement("option");
+        allOpt.value = "__all__";
+        allOpt.textContent = "All";
+        exportSelect.appendChild(allOpt);
+
+        CATEGORIES.forEach(cat => {
+          const opt = document.createElement("option");
+          opt.value = cat.value;
+          opt.textContent = cat.label;
+          exportSelect.appendChild(opt);
+        });
       }
 
-      function safeFileStamp() {
-        const d = new Date();
-        const y = d.getFullYear();
-        const m = String(d.getMonth() + 1).padStart(2, "0");
-        const day = String(d.getDate()).padStart(2, "0");
-        return `${y}-${m}-${day}`;
-      }
+      // Export hint updater (must be global-ish for tag-change rerender)
+      let refreshExportHint = function () {};
 
       function setup() {
         const noteInput = document.getElementById("noteInput");
@@ -875,19 +977,21 @@
         const downloadTxtButton = document.getElementById("downloadTxtButton");
         const exportHint = document.getElementById("exportHint");
 
-        attachCategoryPillState();
+        buildCategoryUI();
+        buildExportOptions();
 
         saveButton.addEventListener("click", () => {
           const text = noteInput.value.trim();
           const category = getSelectedCategory();
           if (!text) return;
           if (!category) {
-            alert("Pick a category (goals, systems, mindset, relationships, todo, other).");
+            alert("Pick a category first.");
             return;
           }
           createNote(text, category);
           noteInput.value = "";
           renderNotes(searchInput.value);
+          refreshExportHint();
         });
 
         noteInput.addEventListener("keydown", event => {
@@ -903,12 +1007,10 @@
           const timestamp = (pastNoteTimeInput.value || "").trim();
 
           if (!text) return;
-
           if (!category) {
             alert("Pick a category before saving a past note.");
             return;
           }
-
           if (!timestamp) {
             alert("Set a timestamp for the past note.");
             return;
@@ -917,47 +1019,61 @@
           createNote(text, category, timestamp);
           pastNoteInput.value = "";
           renderNotes(searchInput.value);
+          refreshExportHint();
         });
 
         searchInput.addEventListener("input", () => {
           renderNotes(searchInput.value);
         });
 
-        // Export UI logic
-        function refreshExportHint() {
-          const tag = (exportTagSelect.value || "").trim();
-          if (!tag) {
+        refreshExportHint = function () {
+          const sel = (exportTagSelect.value || "").trim();
+          if (!sel) {
             exportHint.textContent = "";
             return;
           }
-          const count = notes.filter(n => (n.category || "").toLowerCase() === tag).length;
+
+          if (sel === "__all__") {
+            const count = notes.length;
+            exportHint.textContent = count ? `${count} note${count !== 1 ? "s" : ""} total` : "No notes yet";
+            return;
+          }
+
+          const count = notes.filter(n => (n.category || "").toLowerCase() === sel).length;
           exportHint.textContent = count
-            ? `${count} note${count !== 1 ? "s" : ""} in ${tagLabel(tag)}`
-            : `No notes in ${tagLabel(tag)} yet`;
-        }
+            ? `${count} note${count !== 1 ? "s" : ""} in ${tagLabel(sel)}`
+            : `No notes in ${tagLabel(sel)} yet`;
+        };
 
         exportTagSelect.addEventListener("change", () => {
           refreshExportHint();
         });
 
         downloadTxtButton.addEventListener("click", () => {
-          const tag = (exportTagSelect.value || "").trim();
-          if (!tag) {
-            alert("Choose a tag to export first.");
+          const sel = (exportTagSelect.value || "").trim();
+          if (!sel) {
+            alert("Choose an export option first.");
             return;
           }
 
-          const txt = buildTxtExportForTag(tag);
+          const txt = buildTxtExport(sel);
           if (!txt) {
-            alert(`No notes found for ${tagLabel(tag)}.`);
+            alert(sel === "__all__" ? "No notes to export." : `No notes found for ${tagLabel(sel)}.`);
             return;
           }
 
-          const filename = `slipbox_${tag}_export_${safeFileStamp()}.txt`;
+          const filename =
+            sel === "__all__"
+              ? `slipbox_all_export_${safeFileStamp()}.txt`
+              : `slipbox_${sel}_export_${safeFileStamp()}.txt`;
+
           downloadTextFile(filename, txt);
         });
 
         loadNotes();
+        // one-time migration: convert old categories and save back
+        saveNotes();
+
         renderNotes();
         refreshExportHint();
       }
