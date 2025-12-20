@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>notebank</title>
+  <title>Slipbox</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     :root {
@@ -273,14 +273,21 @@
       padding-right: 2px;
     }
 
-    .export-row {
+    .export-block {
       margin-top: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .export-row {
       display: flex;
       gap: 10px;
       align-items: center;
       flex-wrap: wrap;
     }
 
+    .export-row input,
     .export-row select {
       flex: 1;
       min-width: 180px;
@@ -294,6 +301,7 @@
       cursor: pointer;
     }
 
+    .export-row input:focus,
     .export-row select:focus {
       border-color: #6366f1;
       box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.6);
@@ -445,7 +453,7 @@
   <div class="app">
     <header>
       <div>
-        <div class="title">notebank !</div>
+        <div class="title">Slipbox</div>
         <div class="subtitle">A minimal inbox for your notes</div>
       </div>
       <div class="subtitle">Stored locally · No account · No sync (yet)</div>
@@ -524,19 +532,37 @@
           />
         </div>
 
-        <!-- Export: tag export + Export All -->
-        <div class="export-row" aria-label="Export notes">
-          <select id="exportTagSelect" title="Choose a tag to export">
-            <option value="" selected disabled>Export by tag…</option>
-          </select>
-          <button id="downloadTagTxtButton" class="secondary" title="Download tag .txt export">
-            Download tag .txt
-          </button>
-          <button id="downloadAllTxtButton" class="secondary" title="Download all notes as .txt">
-            Export all .txt
-          </button>
+        <!-- Exports: Export all, export by day, export by week-of-month -->
+        <div class="export-block" aria-label="Export notes">
+          <div class="export-row">
+            <button id="exportAllBtn" class="secondary" title="Download all notes as .txt">
+              Export all .txt
+            </button>
+          </div>
+
+          <div class="export-row">
+            <input id="exportDayInput" type="date" title="Choose a day to export" />
+            <button id="exportDayBtn" class="secondary" title="Export selected day">
+              Export day .txt
+            </button>
+          </div>
+
+          <div class="export-row">
+            <input id="exportMonthInput" type="month" title="Choose a month" />
+            <select id="exportWeekSelect" title="Choose week of month">
+              <option value="1">Week 1 (1–7)</option>
+              <option value="2">Week 2 (8–14)</option>
+              <option value="3">Week 3 (15–21)</option>
+              <option value="4">Week 4 (22–28)</option>
+              <option value="5">Week 5 (29–end)</option>
+            </select>
+            <button id="exportWeekBtn" class="secondary" title="Export selected week">
+              Export week .txt
+            </button>
+          </div>
+
+          <div id="exportHint" class="hint"></div>
         </div>
-        <div id="exportHint" class="hint"></div>
 
         <div id="notesList" class="notes-list"></div>
       </section>
@@ -553,7 +579,7 @@
         "July","August","September","October","November","December"
       ];
 
-      // Categories (removed "other")
+      // Categories: removed "other", added your new ones
       const CATEGORIES = [
         { value: "goals", label: "Goals", help: "Outcomes you want. Targets, milestones, who you’re trying to become." },
         { value: "systems", label: "Systems", help: "How you operate. Routines, rules, checklists, frameworks, processes." },
@@ -581,10 +607,7 @@
       function normalizeCategory(rawCategory) {
         const c = (rawCategory || "").toLowerCase().trim();
         if (CATEGORY_VALUES.includes(c)) return c;
-
-        // migrate old "other" -> random_thoughts
-        if (c === "other") return "random_thoughts";
-
+        if (c === "other") return "random_thoughts"; // migrate old data
         return "random_thoughts";
       }
 
@@ -656,37 +679,6 @@
         saveNotes();
       }
 
-      function getMonthKey(d) {
-        if (!(d instanceof Date) || isNaN(d.getTime())) return "unknown";
-        const y = d.getFullYear();
-        const m = String(d.getMonth() + 1).padStart(2, "0");
-        return `${y}-${m}`;
-      }
-
-      function getDayKey(d) {
-        if (!(d instanceof Date) || isNaN(d.getTime())) return "unknown";
-        const y = d.getFullYear();
-        const m = String(d.getMonth() + 1).padStart(2, "0");
-        const day = String(d.getDate()).padStart(2, "0");
-        return `${y}-${m}-${day}`;
-      }
-
-      function getMonthLabelFromKey(key) {
-        if (key === "unknown") return "Unknown";
-        const [y, m] = key.split("-");
-        const idx = parseInt(m, 10) - 1;
-        const name = MONTH_NAMES[idx] || "Unknown";
-        return `${name} ${y}`;
-      }
-
-      function getDayLabelFromKey(key) {
-        if (key === "unknown") return "Unknown day";
-        const [y, m, d] = key.split("-");
-        const idx = parseInt(m, 10) - 1;
-        const monthName = MONTH_NAMES[idx] || "Unknown";
-        return `${monthName} ${parseInt(d, 10)}`;
-      }
-
       function formatTime(isoString) {
         const d = new Date(isoString);
         if (isNaN(d.getTime())) return "";
@@ -720,6 +712,38 @@
         URL.revokeObjectURL(url);
       }
 
+      // ---------- Month/Day grouping for display ----------
+      function getMonthKey(d) {
+        if (!(d instanceof Date) || isNaN(d.getTime())) return "unknown";
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        return `${y}-${m}`;
+      }
+
+      function getDayKey(d) {
+        if (!(d instanceof Date) || isNaN(d.getTime())) return "unknown";
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        return `${y}-${m}-${day}`;
+      }
+
+      function getMonthLabelFromKey(key) {
+        if (key === "unknown") return "Unknown";
+        const [y, m] = key.split("-");
+        const idx = parseInt(m, 10) - 1;
+        const name = MONTH_NAMES[idx] || "Unknown";
+        return `${name} ${y}`;
+      }
+
+      function getDayLabelFromKey(key) {
+        if (key === "unknown") return "Unknown day";
+        const [y, m, d] = key.split("-");
+        const idx = parseInt(m, 10) - 1;
+        const monthName = MONTH_NAMES[idx] || "Unknown";
+        return `${monthName} ${parseInt(d, 10)}`;
+      }
+
       function buildStructureFromNotes(noteArray) {
         const structure = {};
         noteArray.forEach(note => {
@@ -734,20 +758,58 @@
         return structure;
       }
 
-      function buildTxtExportAll() {
-        if (!notes.length) return "";
-        return buildTxtFromNotes(notes.slice(), { includeTagOnLine: true, title: "ALL NOTES" });
+      // ---------- Export helpers (day/week/all) ----------
+      function localYMDFromDate(d) {
+        // local calendar date components
+        return { y: d.getFullYear(), m: d.getMonth() + 1, d: d.getDate() };
       }
 
-      function buildTxtExportTag(tag) {
-        const t = (tag || "").toLowerCase().trim();
-        if (!CATEGORY_VALUES.includes(t)) return "";
-        const tagNotes = notes.filter(n => (n.category || "").toLowerCase() === t);
-        if (!tagNotes.length) return "";
-        return buildTxtFromNotes(tagNotes, { includeTagOnLine: false, title: `TAG: ${tagLabel(t)}` });
+      function parseYMDString(yyyy_mm_dd) {
+        // expects "YYYY-MM-DD"
+        const [y, m, d] = (yyyy_mm_dd || "").split("-").map(n => parseInt(n, 10));
+        if (!y || !m || !d) return null;
+        return { y, m, d };
       }
 
-      function buildTxtFromNotes(noteList, { includeTagOnLine, title }) {
+      function daysInMonth(year, month1to12) {
+        return new Date(year, month1to12, 0).getDate();
+      }
+
+      function getNotesForDay(dateStr) {
+        const target = parseYMDString(dateStr);
+        if (!target) return [];
+        return notes.filter(n => {
+          const nd = new Date(n.createdAt);
+          if (isNaN(nd.getTime())) return false;
+          const c = localYMDFromDate(nd);
+          return c.y === target.y && c.m === target.m && c.d === target.d;
+        });
+      }
+
+      // Week-of-month definition (simple + matches your example):
+      // Week 1 = 1–7, Week 2 = 8–14, Week 3 = 15–21, Week 4 = 22–28, Week 5 = 29–end
+      function getWeekRange(year, month1to12, weekNumber) {
+        const last = daysInMonth(year, month1to12);
+        const w = Math.min(Math.max(parseInt(weekNumber, 10) || 1, 1), 5);
+
+        const start = (w - 1) * 7 + 1;
+        const end = (w === 5) ? last : Math.min(w * 7, last);
+        return { startDay: start, endDay: end, lastDay: last };
+      }
+
+      function getNotesForWeekOfMonth(year, month1to12, weekNumber) {
+        const range = getWeekRange(year, month1to12, weekNumber);
+        return notes.filter(n => {
+          const nd = new Date(n.createdAt);
+          if (isNaN(nd.getTime())) return false;
+          const c = localYMDFromDate(nd);
+          return c.y === year && c.m === month1to12 && c.d >= range.startDay && c.d <= range.endDay;
+        });
+      }
+
+      function buildTxtFromNotes(noteList, { title }) {
+        if (!noteList.length) return "";
+
         const structure = buildStructureFromNotes(noteList);
         const lines = [];
         lines.push(`SLIPBOX EXPORT — ${title}`);
@@ -766,13 +828,10 @@
               return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
             });
 
+            // For time-based exports, include tag on each line (since it's "all")
             dayNotes.forEach(note => {
               const time = formatTime(note.createdAt);
-              if (includeTagOnLine) {
-                lines.push(`[${time}] (${tagLabel(note.category).toUpperCase()}) ${note.text}`);
-              } else {
-                lines.push(`[${time}] ${note.text}`);
-              }
+              lines.push(`[${time}] (${tagLabel(note.category).toUpperCase()}) ${note.text}`);
               lines.push("");
             });
           });
@@ -783,6 +842,47 @@
         return lines.join("\n").replace(/\n{3,}/g, "\n\n");
       }
 
+      function exportAllTxt() {
+        if (!notes.length) return { ok: false, msg: "No notes to export." };
+        const txt = buildTxtFromNotes(notes.slice(), { title: "ALL NOTES" });
+        downloadTextFile(`slipbox_all_export_${safeFileStamp()}.txt`, txt);
+        return { ok: true };
+      }
+
+      function exportDayTxt(dateStr) {
+        const list = getNotesForDay(dateStr).slice().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        if (!list.length) return { ok: false, msg: "No notes found for that day." };
+        const title = `DAY: ${dateStr}`;
+        const txt = buildTxtFromNotes(list, { title });
+        downloadTextFile(`slipbox_day_${dateStr}_export_${safeFileStamp()}.txt`, txt);
+        return { ok: true };
+      }
+
+      function exportWeekTxt(monthStr, weekNumber) {
+        // monthStr = "YYYY-MM"
+        if (!monthStr) return { ok: false, msg: "Choose a month first." };
+        const [yS, mS] = monthStr.split("-");
+        const year = parseInt(yS, 10);
+        const month = parseInt(mS, 10);
+        if (!year || !month) return { ok: false, msg: "Invalid month." };
+
+        const range = getWeekRange(year, month, weekNumber);
+        const list = getNotesForWeekOfMonth(year, month, weekNumber)
+          .slice()
+          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+        if (!list.length) return { ok: false, msg: "No notes found for that week." };
+
+        const monthName = MONTH_NAMES[month - 1] || "Unknown";
+        const title = `WEEK: ${monthName} ${year} — Week ${weekNumber} (${range.startDay}–${range.endDay})`;
+        const txt = buildTxtFromNotes(list, { title });
+
+        const stampMonth = `${year}-${String(month).padStart(2, "0")}`;
+        downloadTextFile(`slipbox_week_${stampMonth}_w${weekNumber}_export_${safeFileStamp()}.txt`, txt);
+        return { ok: true };
+      }
+
+      // ---------- Render ----------
       function renderNotes(filterValue = "") {
         const listEl = document.getElementById("notesList");
         const query = filterValue.toLowerCase().trim();
@@ -934,6 +1034,7 @@
         });
       }
 
+      // ---------- Build category UI ----------
       function buildCategoryUI() {
         const container = document.getElementById("categoryOptions");
         container.innerHTML = "";
@@ -973,27 +1074,14 @@
         syncActiveAndHelp();
       }
 
-      function buildExportTagOptions() {
-        const exportSelect = document.getElementById("exportTagSelect");
-        exportSelect.innerHTML = "";
-
-        const first = document.createElement("option");
-        first.value = "";
-        first.disabled = true;
-        first.selected = true;
-        first.textContent = "Export by tag…";
-        exportSelect.appendChild(first);
-
-        CATEGORIES.forEach(cat => {
-          const opt = document.createElement("option");
-          opt.value = cat.value;
-          opt.textContent = cat.label;
-          exportSelect.appendChild(opt);
-        });
+      // ---------- Export hint ----------
+      let refreshExportHint = function () {};
+      function setExportHint(msg) {
+        const el = document.getElementById("exportHint");
+        el.textContent = msg || "";
       }
 
-      let refreshExportHint = function () {};
-
+      // ---------- Setup ----------
       function setup() {
         const noteInput = document.getElementById("noteInput");
         const saveButton = document.getElementById("saveButton");
@@ -1003,13 +1091,14 @@
         const pastNoteTimeInput = document.getElementById("pastNoteTime");
         const savePastButton = document.getElementById("savePastButton");
 
-        const exportTagSelect = document.getElementById("exportTagSelect");
-        const downloadTagTxtButton = document.getElementById("downloadTagTxtButton");
-        const downloadAllTxtButton = document.getElementById("downloadAllTxtButton");
-        const exportHint = document.getElementById("exportHint");
+        const exportAllBtn = document.getElementById("exportAllBtn");
+        const exportDayInput = document.getElementById("exportDayInput");
+        const exportDayBtn = document.getElementById("exportDayBtn");
+        const exportMonthInput = document.getElementById("exportMonthInput");
+        const exportWeekSelect = document.getElementById("exportWeekSelect");
+        const exportWeekBtn = document.getElementById("exportWeekBtn");
 
         buildCategoryUI();
-        buildExportTagOptions();
 
         saveButton.addEventListener("click", () => {
           const text = noteInput.value.trim();
@@ -1057,48 +1146,32 @@
           renderNotes(searchInput.value);
         });
 
+        exportAllBtn.addEventListener("click", () => {
+          const res = exportAllTxt();
+          if (!res.ok) alert(res.msg);
+        });
+
+        exportDayBtn.addEventListener("click", () => {
+          const val = (exportDayInput.value || "").trim(); // YYYY-MM-DD
+          if (!val) { alert("Choose a day first."); return; }
+          const res = exportDayTxt(val);
+          if (!res.ok) alert(res.msg);
+        });
+
+        exportWeekBtn.addEventListener("click", () => {
+          const monthVal = (exportMonthInput.value || "").trim(); // YYYY-MM
+          const weekVal = (exportWeekSelect.value || "1").trim();
+          const res = exportWeekTxt(monthVal, weekVal);
+          if (!res.ok) alert(res.msg);
+        });
+
         refreshExportHint = function () {
-          const sel = (exportTagSelect.value || "").trim();
           const total = notes.length;
-
-          if (!sel) {
-            exportHint.textContent = total ? `${total} note${total !== 1 ? "s" : ""} total` : "No notes yet";
-            return;
-          }
-
-          const count = notes.filter(n => (n.category || "").toLowerCase() === sel).length;
-          exportHint.textContent = `${total} total · ${count} in ${tagLabel(sel)}`;
+          setExportHint(total ? `${total} note${total !== 1 ? "s" : ""} total` : "No notes yet");
         };
 
-        exportTagSelect.addEventListener("change", refreshExportHint);
-
-        downloadTagTxtButton.addEventListener("click", () => {
-          const sel = (exportTagSelect.value || "").trim();
-          if (!sel) {
-            alert("Choose a tag to export first.");
-            return;
-          }
-          const txt = buildTxtExportTag(sel);
-          if (!txt) {
-            alert(`No notes found for ${tagLabel(sel)}.`);
-            return;
-          }
-          const filename = `slipbox_${sel}_export_${safeFileStamp()}.txt`;
-          downloadTextFile(filename, txt);
-        });
-
-        downloadAllTxtButton.addEventListener("click", () => {
-          const txt = buildTxtExportAll();
-          if (!txt) {
-            alert("No notes to export.");
-            return;
-          }
-          const filename = `slipbox_all_export_${safeFileStamp()}.txt`;
-          downloadTextFile(filename, txt);
-        });
-
         loadNotes();
-        // one-time migration save back (handles old "other")
+        // migration save (handles any old "other")
         saveNotes();
 
         renderNotes();
