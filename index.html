@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>notebank</title>
+  <title>Slipbox</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     :root {
@@ -453,7 +453,7 @@
   <div class="app">
     <header>
       <div>
-        <div class="title">notebank</div>
+        <div class="title">Slipbox</div>
         <div class="subtitle">A minimal inbox for your notes</div>
       </div>
       <div class="subtitle">Stored locally · No account · No sync (yet)</div>
@@ -532,7 +532,7 @@
           />
         </div>
 
-        <!-- Exports: Export all, export by day, export by week-of-month -->
+        <!-- Exports: Export all, by day, by week-of-month, by month -->
         <div class="export-block" aria-label="Export notes">
           <div class="export-row">
             <button id="exportAllBtn" class="secondary" title="Download all notes as .txt">
@@ -548,7 +548,14 @@
           </div>
 
           <div class="export-row">
-            <input id="exportMonthInput" type="month" title="Choose a month" />
+            <input id="exportMonthOnlyInput" type="month" title="Choose a month to export" />
+            <button id="exportMonthBtn" class="secondary" title="Export selected month">
+              Export month .txt
+            </button>
+          </div>
+
+          <div class="export-row">
+            <input id="exportMonthInput" type="month" title="Choose a month for week export" />
             <select id="exportWeekSelect" title="Choose week of month">
               <option value="1">Week 1 (1–7)</option>
               <option value="2">Week 2 (8–14)</option>
@@ -579,7 +586,6 @@
         "July","August","September","October","November","December"
       ];
 
-      // Categories: removed "other", added your new ones
       const CATEGORIES = [
         { value: "goals", label: "Goals", help: "Outcomes you want. Targets, milestones, who you’re trying to become." },
         { value: "systems", label: "Systems", help: "How you operate. Routines, rules, checklists, frameworks, processes." },
@@ -591,23 +597,20 @@
         { value: "project_ideas", label: "Project Ideas", help: "Buildable ideas. App features, business/content concepts, product/brand ideas, experiments you might develop." },
         { value: "random_thoughts", label: "Random Thoughts & Ideas", help: "Loose captures. Sparks, curiosities, half-formed ideas, quotes, quick observations not yet a project or task." }
       ];
-
       const CATEGORY_VALUES = CATEGORIES.map(c => c.value);
 
       function tagLabel(tag) {
         const found = CATEGORIES.find(c => c.value === tag);
         return found ? found.label : (tag || "");
       }
-
       function tagHelpText(tag) {
         const found = CATEGORIES.find(c => c.value === tag);
         return found ? found.help : "Pick a tag to see what belongs there.";
       }
-
       function normalizeCategory(rawCategory) {
         const c = (rawCategory || "").toLowerCase().trim();
         if (CATEGORY_VALUES.includes(c)) return c;
-        if (c === "other") return "random_thoughts"; // migrate old data
+        if (c === "other") return "random_thoughts";
         return "random_thoughts";
       }
 
@@ -631,7 +634,6 @@
           notes = [];
         }
       }
-
       function saveNotes() {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
       }
@@ -712,14 +714,13 @@
         URL.revokeObjectURL(url);
       }
 
-      // ---------- Month/Day grouping for display ----------
+      // ---------- Display grouping ----------
       function getMonthKey(d) {
         if (!(d instanceof Date) || isNaN(d.getTime())) return "unknown";
         const y = d.getFullYear();
         const m = String(d.getMonth() + 1).padStart(2, "0");
         return `${y}-${m}`;
       }
-
       function getDayKey(d) {
         if (!(d instanceof Date) || isNaN(d.getTime())) return "unknown";
         const y = d.getFullYear();
@@ -727,7 +728,6 @@
         const day = String(d.getDate()).padStart(2, "0");
         return `${y}-${m}-${day}`;
       }
-
       function getMonthLabelFromKey(key) {
         if (key === "unknown") return "Unknown";
         const [y, m] = key.split("-");
@@ -735,7 +735,6 @@
         const name = MONTH_NAMES[idx] || "Unknown";
         return `${name} ${y}`;
       }
-
       function getDayLabelFromKey(key) {
         if (key === "unknown") return "Unknown day";
         const [y, m, d] = key.split("-");
@@ -758,19 +757,20 @@
         return structure;
       }
 
-      // ---------- Export helpers (day/week/all) ----------
+      // ---------- Export helpers ----------
       function localYMDFromDate(d) {
-        // local calendar date components
         return { y: d.getFullYear(), m: d.getMonth() + 1, d: d.getDate() };
       }
-
       function parseYMDString(yyyy_mm_dd) {
-        // expects "YYYY-MM-DD"
         const [y, m, d] = (yyyy_mm_dd || "").split("-").map(n => parseInt(n, 10));
         if (!y || !m || !d) return null;
         return { y, m, d };
       }
-
+      function parseYMString(yyyy_mm) {
+        const [y, m] = (yyyy_mm || "").split("-").map(n => parseInt(n, 10));
+        if (!y || !m) return null;
+        return { y, m };
+      }
       function daysInMonth(year, month1to12) {
         return new Date(year, month1to12, 0).getDate();
       }
@@ -786,25 +786,40 @@
         });
       }
 
-      // Week-of-month definition (simple + matches your example):
+      function getNotesForMonth(ymStr) {
+        const target = parseYMString(ymStr);
+        if (!target) return [];
+        return notes.filter(n => {
+          const nd = new Date(n.createdAt);
+          if (isNaN(nd.getTime())) return false;
+          const c = localYMDFromDate(nd);
+          return c.y === target.y && c.m === target.m;
+        });
+      }
+
+      // Week-of-month definition:
       // Week 1 = 1–7, Week 2 = 8–14, Week 3 = 15–21, Week 4 = 22–28, Week 5 = 29–end
       function getWeekRange(year, month1to12, weekNumber) {
         const last = daysInMonth(year, month1to12);
         const w = Math.min(Math.max(parseInt(weekNumber, 10) || 1, 1), 5);
-
         const start = (w - 1) * 7 + 1;
         const end = (w === 5) ? last : Math.min(w * 7, last);
         return { startDay: start, endDay: end, lastDay: last };
       }
 
-      function getNotesForWeekOfMonth(year, month1to12, weekNumber) {
-        const range = getWeekRange(year, month1to12, weekNumber);
-        return notes.filter(n => {
+      function getNotesForWeekOfMonth(ymStr, weekNumber) {
+        const target = parseYMString(ymStr);
+        if (!target) return { list: [], range: null, target: null };
+        const range = getWeekRange(target.y, target.m, weekNumber);
+
+        const list = notes.filter(n => {
           const nd = new Date(n.createdAt);
           if (isNaN(nd.getTime())) return false;
           const c = localYMDFromDate(nd);
-          return c.y === year && c.m === month1to12 && c.d >= range.startDay && c.d <= range.endDay;
+          return c.y === target.y && c.m === target.m && c.d >= range.startDay && c.d <= range.endDay;
         });
+
+        return { list, range, target };
       }
 
       function buildTxtFromNotes(noteList, { title }) {
@@ -828,7 +843,6 @@
               return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
             });
 
-            // For time-based exports, include tag on each line (since it's "all")
             dayNotes.forEach(note => {
               const time = formatTime(note.createdAt);
               lines.push(`[${time}] (${tagLabel(note.category).toUpperCase()}) ${note.text}`);
@@ -852,33 +866,36 @@
       function exportDayTxt(dateStr) {
         const list = getNotesForDay(dateStr).slice().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         if (!list.length) return { ok: false, msg: "No notes found for that day." };
-        const title = `DAY: ${dateStr}`;
-        const txt = buildTxtFromNotes(list, { title });
+        const txt = buildTxtFromNotes(list, { title: `DAY: ${dateStr}` });
         downloadTextFile(`slipbox_day_${dateStr}_export_${safeFileStamp()}.txt`, txt);
         return { ok: true };
       }
 
-      function exportWeekTxt(monthStr, weekNumber) {
-        // monthStr = "YYYY-MM"
-        if (!monthStr) return { ok: false, msg: "Choose a month first." };
-        const [yS, mS] = monthStr.split("-");
-        const year = parseInt(yS, 10);
-        const month = parseInt(mS, 10);
-        if (!year || !month) return { ok: false, msg: "Invalid month." };
+      function exportMonthTxt(ymStr) {
+        const list = getNotesForMonth(ymStr).slice().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        if (!list.length) return { ok: false, msg: "No notes found for that month." };
 
-        const range = getWeekRange(year, month, weekNumber);
-        const list = getNotesForWeekOfMonth(year, month, weekNumber)
-          .slice()
-          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        const target = parseYMString(ymStr);
+        const monthName = MONTH_NAMES[(target?.m || 1) - 1] || "Unknown";
+        const title = `MONTH: ${monthName} ${target?.y || ""}`.trim();
 
-        if (!list.length) return { ok: false, msg: "No notes found for that week." };
-
-        const monthName = MONTH_NAMES[month - 1] || "Unknown";
-        const title = `WEEK: ${monthName} ${year} — Week ${weekNumber} (${range.startDay}–${range.endDay})`;
         const txt = buildTxtFromNotes(list, { title });
+        downloadTextFile(`slipbox_month_${ymStr}_export_${safeFileStamp()}.txt`, txt);
+        return { ok: true };
+      }
 
-        const stampMonth = `${year}-${String(month).padStart(2, "0")}`;
-        downloadTextFile(`slipbox_week_${stampMonth}_w${weekNumber}_export_${safeFileStamp()}.txt`, txt);
+      function exportWeekTxt(ymStr, weekNumber) {
+        const { list, range, target } = getNotesForWeekOfMonth(ymStr, weekNumber);
+        if (!target) return { ok: false, msg: "Invalid month. Use the month picker or enter YYYY-MM." };
+
+        const sorted = list.slice().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        if (!sorted.length) return { ok: false, msg: "No notes found for that week." };
+
+        const monthName = MONTH_NAMES[target.m - 1] || "Unknown";
+        const title = `WEEK: ${monthName} ${target.y} — Week ${weekNumber} (${range.startDay}–${range.endDay})`;
+        const txt = buildTxtFromNotes(sorted, { title });
+
+        downloadTextFile(`slipbox_week_${ymStr}_w${weekNumber}_export_${safeFileStamp()}.txt`, txt);
         return { ok: true };
       }
 
@@ -1034,7 +1051,6 @@
         });
       }
 
-      // ---------- Build category UI ----------
       function buildCategoryUI() {
         const container = document.getElementById("categoryOptions");
         container.innerHTML = "";
@@ -1074,14 +1090,12 @@
         syncActiveAndHelp();
       }
 
-      // ---------- Export hint ----------
       let refreshExportHint = function () {};
       function setExportHint(msg) {
         const el = document.getElementById("exportHint");
         el.textContent = msg || "";
       }
 
-      // ---------- Setup ----------
       function setup() {
         const noteInput = document.getElementById("noteInput");
         const saveButton = document.getElementById("saveButton");
@@ -1094,6 +1108,10 @@
         const exportAllBtn = document.getElementById("exportAllBtn");
         const exportDayInput = document.getElementById("exportDayInput");
         const exportDayBtn = document.getElementById("exportDayBtn");
+
+        const exportMonthOnlyInput = document.getElementById("exportMonthOnlyInput");
+        const exportMonthBtn = document.getElementById("exportMonthBtn");
+
         const exportMonthInput = document.getElementById("exportMonthInput");
         const exportWeekSelect = document.getElementById("exportWeekSelect");
         const exportWeekBtn = document.getElementById("exportWeekBtn");
@@ -1104,10 +1122,7 @@
           const text = noteInput.value.trim();
           const category = getSelectedCategory();
           if (!text) return;
-          if (!category) {
-            alert("Pick a category first.");
-            return;
-          }
+          if (!category) { alert("Pick a category first."); return; }
           createNote(text, category);
           noteInput.value = "";
           renderNotes(searchInput.value);
@@ -1125,16 +1140,9 @@
           const text = pastNoteInput.value.trim();
           const category = getSelectedCategory();
           const timestamp = (pastNoteTimeInput.value || "").trim();
-
           if (!text) return;
-          if (!category) {
-            alert("Pick a category before saving a past note.");
-            return;
-          }
-          if (!timestamp) {
-            alert("Set a timestamp for the past note.");
-            return;
-          }
+          if (!category) { alert("Pick a category before saving a past note."); return; }
+          if (!timestamp) { alert("Set a timestamp for the past note."); return; }
 
           createNote(text, category, timestamp);
           pastNoteInput.value = "";
@@ -1158,10 +1166,18 @@
           if (!res.ok) alert(res.msg);
         });
 
+        exportMonthBtn.addEventListener("click", () => {
+          const ym = (exportMonthOnlyInput.value || "").trim(); // YYYY-MM
+          if (!ym) { alert("Choose a month first."); return; }
+          const res = exportMonthTxt(ym);
+          if (!res.ok) alert(res.msg);
+        });
+
         exportWeekBtn.addEventListener("click", () => {
-          const monthVal = (exportMonthInput.value || "").trim(); // YYYY-MM
-          const weekVal = (exportWeekSelect.value || "1").trim();
-          const res = exportWeekTxt(monthVal, weekVal);
+          const ym = (exportMonthInput.value || "").trim(); // YYYY-MM
+          const w = (exportWeekSelect.value || "1").trim();
+          if (!ym) { alert("Choose a month first."); return; }
+          const res = exportWeekTxt(ym, w);
           if (!res.ok) alert(res.msg);
         });
 
@@ -1171,8 +1187,7 @@
         };
 
         loadNotes();
-        // migration save (handles any old "other")
-        saveNotes();
+        saveNotes(); // migration save
 
         renderNotes();
         refreshExportHint();
