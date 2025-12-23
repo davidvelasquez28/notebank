@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <title>Slipbox</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+
   <style>
     :root {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
@@ -449,6 +450,7 @@
     .empty { font-size: 0.8rem; color: #6b7280; padding: 12px 4px; }
   </style>
 </head>
+
 <body>
   <div class="app">
     <header>
@@ -460,7 +462,7 @@
     </header>
 
     <main class="layout">
-      <!-- LEFT PANEL -->
+      <!-- LEFT -->
       <section class="panel panel-left">
         <h2>New note</h2>
 
@@ -518,7 +520,7 @@
         </div>
       </section>
 
-      <!-- RIGHT PANEL -->
+      <!-- RIGHT -->
       <section class="panel panel-right">
         <h2>Notes</h2>
 
@@ -532,43 +534,41 @@
           />
         </div>
 
-        <!-- Exports: Export all, by day, by week-of-month, by month -->
         <div class="export-block" aria-label="Export notes">
           <div class="export-row">
-            <button id="exportAllBtn" class="secondary" title="Download all notes as .txt">
-              Export all .txt
-            </button>
+            <button id="exportAllBtn" class="secondary">Export all .txt</button>
           </div>
 
           <div class="export-row">
-            <input id="exportDayInput" type="date" title="Choose a day to export" />
-            <button id="exportDayBtn" class="secondary" title="Export selected day">
-              Export day .txt
-            </button>
+            <input id="exportDayInput" type="date" />
+            <button id="exportDayBtn" class="secondary">Export day .txt</button>
           </div>
 
           <div class="export-row">
-            <input id="exportMonthOnlyInput" type="month" title="Choose a month to export" />
-            <button id="exportMonthBtn" class="secondary" title="Export selected month">
-              Export month .txt
-            </button>
+            <input id="exportMonthOnlyInput" type="month" />
+            <button id="exportMonthBtn" class="secondary">Export month .txt</button>
           </div>
 
           <div class="export-row">
-            <input id="exportMonthInput" type="month" title="Choose a month for week export" />
-            <select id="exportWeekSelect" title="Choose week of month">
+            <input id="exportMonthInput" type="month" />
+            <select id="exportWeekSelect">
               <option value="1">Week 1 (1–7)</option>
               <option value="2">Week 2 (8–14)</option>
               <option value="3">Week 3 (15–21)</option>
               <option value="4">Week 4 (22–28)</option>
               <option value="5">Week 5 (29–end)</option>
             </select>
-            <button id="exportWeekBtn" class="secondary" title="Export selected week">
-              Export week .txt
-            </button>
+            <button id="exportWeekBtn" class="secondary">Export week .txt</button>
+          </div>
+
+          <!-- CSV import -->
+          <div class="export-row">
+            <input id="csvInput" type="file" accept=".csv,text/csv" />
+            <button id="importCsvBtn" class="secondary">Import CSV → Inbox</button>
           </div>
 
           <div id="exportHint" class="hint"></div>
+          <div id="importHint" class="hint"></div>
         </div>
 
         <div id="notesList" class="notes-list"></div>
@@ -579,6 +579,7 @@
   <script>
     (function () {
       const STORAGE_KEY = "slipboxNotes";
+      const IMPORT_YEAR = 2025; // all CSV notes assumed to be from 2025
       let notes = [];
 
       const MONTH_NAMES = [
@@ -586,16 +587,18 @@
         "July","August","September","October","November","December"
       ];
 
+      // Added "Inbox" for untagged imports + unprocessed notes
       const CATEGORIES = [
+        { value: "inbox", label: "Inbox", help: "Imported / untagged notes. Work through these and assign the right tag when you’re ready." },
         { value: "goals", label: "Goals", help: "Outcomes you want. Targets, milestones, who you’re trying to become." },
         { value: "systems", label: "Systems", help: "How you operate. Routines, rules, checklists, frameworks, processes." },
         { value: "mindset", label: "Mindset", help: "Inner world. Emotions, self-awareness, patterns, psychology, reflections." },
         { value: "relationships", label: "Relationships", help: "People + how you handle them. Communication, boundaries, family/friends/dating." },
         { value: "todo", label: "To-Do", help: "Action items. Tasks you can complete/check off. If it’s executable, it goes here." },
-        { value: "trading", label: "Trading", help: "Trading-specific notes. Setups, rules, journal notes, market observations, trade psychology tied to execution." },
-        { value: "crypto", label: "Crypto", help: "Crypto-specific notes. Thesis, security/wallets, DCA plans, watchlists, exchange/custody notes." },
-        { value: "project_ideas", label: "Project Ideas", help: "Buildable ideas. App features, business/content concepts, product/brand ideas, experiments you might develop." },
-        { value: "random_thoughts", label: "Random Thoughts & Ideas", help: "Loose captures. Sparks, curiosities, half-formed ideas, quotes, quick observations not yet a project or task." }
+        { value: "trading", label: "Trading", help: "Trading-specific notes. Setups, rules, journal notes, market observations, execution notes." },
+        { value: "crypto", label: "Crypto", help: "Crypto-specific notes. Thesis, security/wallets, DCA plans, watchlists, custody notes." },
+        { value: "project_ideas", label: "Project Ideas", help: "Buildable ideas. App features, business/content concepts, product/brand ideas." },
+        { value: "random_thoughts", label: "Random Thoughts & Ideas", help: "Loose captures. Sparks, curiosities, half-formed ideas not yet a task/project." }
       ];
       const CATEGORY_VALUES = CATEGORIES.map(c => c.value);
 
@@ -607,11 +610,13 @@
         const found = CATEGORIES.find(c => c.value === tag);
         return found ? found.help : "Pick a tag to see what belongs there.";
       }
+
       function normalizeCategory(rawCategory) {
         const c = (rawCategory || "").toLowerCase().trim();
         if (CATEGORY_VALUES.includes(c)) return c;
         if (c === "other") return "random_thoughts";
-        return "random_thoughts";
+        if (!c) return "inbox";
+        return "inbox";
       }
 
       function loadNotes() {
@@ -634,6 +639,7 @@
           notes = [];
         }
       }
+
       function saveNotes() {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
       }
@@ -797,7 +803,7 @@
         });
       }
 
-      // Week-of-month definition:
+      // Week-of-month:
       // Week 1 = 1–7, Week 2 = 8–14, Week 3 = 15–21, Week 4 = 22–28, Week 5 = 29–end
       function getWeekRange(year, month1to12, weekNumber) {
         const last = daysInMonth(year, month1to12);
@@ -871,15 +877,44 @@
         return { ok: true };
       }
 
+      // Month export earliest -> latest (your preference)
       function exportMonthTxt(ymStr) {
-        const list = getNotesForMonth(ymStr).slice().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        const list = getNotesForMonth(ymStr).slice().sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
         if (!list.length) return { ok: false, msg: "No notes found for that month." };
 
         const target = parseYMString(ymStr);
         const monthName = MONTH_NAMES[(target?.m || 1) - 1] || "Unknown";
         const title = `MONTH: ${monthName} ${target?.y || ""}`.trim();
 
-        const txt = buildTxtFromNotes(list, { title });
+        // buildTxtFromNotes prints newest-first by day; for month we want a straight read.
+        // So we generate a simpler month-only text block in chronological order.
+        const lines = [];
+        lines.push(`SLIPBOX EXPORT — ${title}`);
+        lines.push(`Generated: ${formatGeneratedStamp()}`);
+        lines.push("");
+
+        // group by day ascending (YYYY-MM-DD asc)
+        const byDay = {};
+        list.forEach(n => {
+          const d = new Date(n.createdAt);
+          const key = getDayKey(d);
+          if (!byDay[key]) byDay[key] = [];
+          byDay[key].push(n);
+        });
+
+        const dayKeys = Object.keys(byDay).sort((a, b) => a.localeCompare(b)); // earliest -> latest
+        dayKeys.forEach(dayKey => {
+          lines.push(`— ${getDayLabelFromKey(dayKey)} —`);
+          const dayNotes = byDay[dayKey].slice().sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt)); // earliest -> latest
+          dayNotes.forEach(note => {
+            const time = formatTime(note.createdAt);
+            lines.push(`[${time}] (${tagLabel(note.category).toUpperCase()}) ${note.text}`);
+            lines.push("");
+          });
+          lines.push("");
+        });
+
+        const txt = lines.join("\n").replace(/\n{3,}/g, "\n\n").trim() + "\n";
         downloadTextFile(`slipbox_month_${ymStr}_export_${safeFileStamp()}.txt`, txt);
         return { ok: true };
       }
@@ -897,6 +932,171 @@
 
         downloadTextFile(`slipbox_week_${ymStr}_w${weekNumber}_export_${safeFileStamp()}.txt`, txt);
         return { ok: true };
+      }
+
+      // ---------- CSV import (timestamp + note, year assumed 2025, category -> inbox) ----------
+      function parseCSV(text) {
+        // RFC-ish parser: supports commas + quotes + multiline quoted cells
+        const rows = [];
+        let row = [];
+        let cell = "";
+        let inQuotes = false;
+
+        for (let i = 0; i < text.length; i++) {
+          const ch = text[i];
+          const next = text[i + 1];
+
+          if (ch === '"' && inQuotes && next === '"') {
+            cell += '"';
+            i++;
+            continue;
+          }
+
+          if (ch === '"') {
+            inQuotes = !inQuotes;
+            continue;
+          }
+
+          if (ch === "," && !inQuotes) {
+            row.push(cell);
+            cell = "";
+            continue;
+          }
+
+          if ((ch === "\n" || ch === "\r") && !inQuotes) {
+            if (ch === "\r" && next === "\n") i++;
+            row.push(cell);
+            rows.push(row);
+            row = [];
+            cell = "";
+            continue;
+          }
+
+          cell += ch;
+        }
+
+        if (cell.length > 0 || row.length > 0) {
+          row.push(cell);
+          rows.push(row);
+        }
+
+        // trim BOM if present
+        if (rows.length && rows[0].length && typeof rows[0][0] === "string") {
+          rows[0][0] = rows[0][0].replace(/^\uFEFF/, "");
+        }
+
+        return rows;
+      }
+
+      function monthNameToIndex(shortName) {
+        const m = (shortName || "").trim().toLowerCase().slice(0, 3);
+        const map = { jan:0, feb:1, mar:2, apr:3, may:4, jun:5, jul:6, aug:7, sep:8, oct:9, nov:10, dec:11 };
+        return (m in map) ? map[m] : null;
+      }
+
+      function parseCsvTimestampToISO(tsRaw) {
+        // Expected format examples:
+        // "Sun, Aug 31, 11:58 PM"
+        // "Sun, Aug 31, 11:53 PM"
+        // We ignore day-of-week, assume IMPORT_YEAR.
+        const s = String(tsRaw || "").trim();
+        if (!s) return null;
+
+        const m = s.match(/^(?:[A-Za-z]{3},\s*)?([A-Za-z]{3})\s+(\d{1,2}),\s+(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+        if (!m) return null;
+
+        const mon = monthNameToIndex(m[1]);
+        const day = parseInt(m[2], 10);
+        let hour = parseInt(m[3], 10);
+        const minute = parseInt(m[4], 10);
+        const ampm = String(m[5] || "").toUpperCase();
+
+        if (mon === null || !day || isNaN(hour) || isNaN(minute)) return null;
+
+        if (ampm === "PM" && hour < 12) hour += 12;
+        if (ampm === "AM" && hour === 12) hour = 0;
+
+        const d = new Date(IMPORT_YEAR, mon, day, hour, minute, 0);
+        if (isNaN(d.getTime())) return null;
+        return d.toISOString();
+      }
+
+      async function importCsvFileToInbox(file) {
+        const text = await file.text();
+        const rows = parseCSV(text).filter(r => r.some(cell => String(cell || "").trim() !== ""));
+
+        if (!rows.length) {
+          return { ok: false, msg: "CSV looks empty." };
+        }
+
+        let imported = 0;
+        let skipped = 0;
+
+        // Build de-dupe keys (timestamp + text)
+        const existing = new Set(notes.map(n => `${n.createdAt}::${n.text}`));
+
+        // Two supported shapes:
+        // A) No header (your example): col0=timestamp, col1=note
+        // B) With header: tries to find timestamp+note columns
+        const firstRowLower = rows[0].map(c => String(c || "").trim().toLowerCase());
+        const looksLikeHeader = firstRowLower.some(h =>
+          ["timestamp","time","date"].includes(h) || ["note","text","content"].includes(h)
+        );
+
+        let startIndex = 0;
+        let tsIdx = 0;
+        let noteIdx = 1;
+
+        if (looksLikeHeader) {
+          startIndex = 1;
+          tsIdx =
+            firstRowLower.indexOf("timestamp") !== -1 ? firstRowLower.indexOf("timestamp")
+            : firstRowLower.indexOf("time") !== -1 ? firstRowLower.indexOf("time")
+            : firstRowLower.indexOf("date") !== -1 ? firstRowLower.indexOf("date")
+            : 0;
+
+          noteIdx =
+            firstRowLower.indexOf("note") !== -1 ? firstRowLower.indexOf("note")
+            : firstRowLower.indexOf("text") !== -1 ? firstRowLower.indexOf("text")
+            : firstRowLower.indexOf("content") !== -1 ? firstRowLower.indexOf("content")
+            : 1;
+        }
+
+        for (let i = startIndex; i < rows.length; i++) {
+          const r = rows[i];
+          const tsRaw = r[tsIdx] ?? "";
+          const noteRaw = r[noteIdx] ?? "";
+
+          const textVal = String(noteRaw ?? "").trim();
+          const iso = parseCsvTimestampToISO(tsRaw);
+
+          if (!textVal || !iso) {
+            skipped++;
+            continue;
+          }
+
+          const key = `${iso}::${textVal}`;
+          if (existing.has(key)) {
+            skipped++;
+            continue;
+          }
+
+          notes.push({
+            id: Date.now() + Math.random(),
+            text: textVal,          // preserves internal newlines
+            createdAt: iso,         // ISO storage like the rest of your app
+            category: "inbox"       // untagged bucket
+          });
+
+          existing.add(key);
+          imported++;
+        }
+
+        // Keep newest-first in the app UI
+        notes.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        saveNotes();
+
+        return { ok: true, imported, skipped };
       }
 
       // ---------- Render ----------
@@ -1011,20 +1211,19 @@
               select.addEventListener("change", () => {
                 updateNoteCategory(note.id, select.value);
                 renderNotes(document.getElementById("searchInput").value);
-                refreshExportHint();
+                refreshCounts();
               });
 
               const delBtn = document.createElement("button");
               delBtn.className = "danger delete-note-btn";
               delBtn.type = "button";
               delBtn.textContent = "Delete";
-              delBtn.title = "Delete this note";
               delBtn.addEventListener("click", () => {
                 const ok = confirm("Delete this note? This can’t be undone.");
                 if (!ok) return;
                 deleteNote(note.id);
                 renderNotes(document.getElementById("searchInput").value);
-                refreshExportHint();
+                refreshCounts();
               });
 
               tagWrap.appendChild(select);
@@ -1051,6 +1250,7 @@
         });
       }
 
+      // ---------- Category UI ----------
       function buildCategoryUI() {
         const container = document.getElementById("categoryOptions");
         container.innerHTML = "";
@@ -1063,7 +1263,9 @@
           input.type = "radio";
           input.name = "category";
           input.value = cat.value;
-          if (idx === 0) input.checked = true;
+
+          // default selection: Goals (not Inbox)
+          if (cat.value === "goals") input.checked = true;
 
           const span = document.createElement("span");
           span.textContent = cat.label;
@@ -1090,12 +1292,16 @@
         syncActiveAndHelp();
       }
 
-      let refreshExportHint = function () {};
-      function setExportHint(msg) {
-        const el = document.getElementById("exportHint");
-        el.textContent = msg || "";
+      function setHint(id, msg) {
+        const el = document.getElementById(id);
+        if (el) el.textContent = msg || "";
       }
 
+      function refreshCounts() {
+        setHint("exportHint", notes.length ? `${notes.length} note${notes.length !== 1 ? "s" : ""} total` : "No notes yet");
+      }
+
+      // ---------- Setup ----------
       function setup() {
         const noteInput = document.getElementById("noteInput");
         const saveButton = document.getElementById("saveButton");
@@ -1108,13 +1314,14 @@
         const exportAllBtn = document.getElementById("exportAllBtn");
         const exportDayInput = document.getElementById("exportDayInput");
         const exportDayBtn = document.getElementById("exportDayBtn");
-
         const exportMonthOnlyInput = document.getElementById("exportMonthOnlyInput");
         const exportMonthBtn = document.getElementById("exportMonthBtn");
-
         const exportMonthInput = document.getElementById("exportMonthInput");
         const exportWeekSelect = document.getElementById("exportWeekSelect");
         const exportWeekBtn = document.getElementById("exportWeekBtn");
+
+        const csvInput = document.getElementById("csvInput");
+        const importCsvBtn = document.getElementById("importCsvBtn");
 
         buildCategoryUI();
 
@@ -1126,7 +1333,7 @@
           createNote(text, category);
           noteInput.value = "";
           renderNotes(searchInput.value);
-          refreshExportHint();
+          refreshCounts();
         });
 
         noteInput.addEventListener("keydown", event => {
@@ -1147,7 +1354,7 @@
           createNote(text, category, timestamp);
           pastNoteInput.value = "";
           renderNotes(searchInput.value);
-          refreshExportHint();
+          refreshCounts();
         });
 
         searchInput.addEventListener("input", () => {
@@ -1160,37 +1367,53 @@
         });
 
         exportDayBtn.addEventListener("click", () => {
-          const val = (exportDayInput.value || "").trim(); // YYYY-MM-DD
+          const val = (exportDayInput.value || "").trim();
           if (!val) { alert("Choose a day first."); return; }
           const res = exportDayTxt(val);
           if (!res.ok) alert(res.msg);
         });
 
         exportMonthBtn.addEventListener("click", () => {
-          const ym = (exportMonthOnlyInput.value || "").trim(); // YYYY-MM
+          const ym = (exportMonthOnlyInput.value || "").trim();
           if (!ym) { alert("Choose a month first."); return; }
           const res = exportMonthTxt(ym);
           if (!res.ok) alert(res.msg);
         });
 
         exportWeekBtn.addEventListener("click", () => {
-          const ym = (exportMonthInput.value || "").trim(); // YYYY-MM
+          const ym = (exportMonthInput.value || "").trim();
           const w = (exportWeekSelect.value || "1").trim();
           if (!ym) { alert("Choose a month first."); return; }
           const res = exportWeekTxt(ym, w);
           if (!res.ok) alert(res.msg);
         });
 
-        refreshExportHint = function () {
-          const total = notes.length;
-          setExportHint(total ? `${total} note${total !== 1 ? "s" : ""} total` : "No notes yet");
-        };
+        importCsvBtn.addEventListener("click", async () => {
+          const file = csvInput.files && csvInput.files[0];
+          if (!file) { alert("Choose a CSV file first."); return; }
+
+          setHint("importHint", "Importing…");
+          try {
+            const res = await importCsvFileToInbox(file);
+            if (!res.ok) {
+              setHint("importHint", "");
+              alert(res.msg || "Import failed.");
+              return;
+            }
+            renderNotes(searchInput.value);
+            refreshCounts();
+            setHint("importHint", `Imported ${res.imported}. Skipped ${res.skipped}. (Imported notes go to INBOX)`);
+          } catch (e) {
+            console.error(e);
+            setHint("importHint", "");
+            alert("Import failed. Open DevTools → Console for details.");
+          }
+        });
 
         loadNotes();
-        saveNotes(); // migration save
-
+        saveNotes(); // normalize categories / migrate
         renderNotes();
-        refreshExportHint();
+        refreshCounts();
       }
 
       window.addEventListener("DOMContentLoaded", setup);
