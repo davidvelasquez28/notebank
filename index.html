@@ -46,6 +46,7 @@
       align-items: center;
       padding-bottom: 8px;
       border-bottom: 1px solid rgba(103, 120, 136, 0.28);
+      gap: 12px;
     }
 
     .title {
@@ -259,6 +260,91 @@
       cursor: pointer;
     }
 
+    .review-card {
+      background: rgba(17, 23, 30, 0.96);
+      border: 1px solid rgba(67, 81, 94, 0.85);
+      border-radius: 14px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .review-top-row,
+    .review-meta-row,
+    .review-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .review-badge,
+    .score-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 36px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      border: 1px solid rgba(84, 101, 116, 0.9);
+      color: #dbe3ea;
+      background: rgba(25, 33, 42, 0.95);
+    }
+
+    .score-badge {
+      min-width: 48px;
+      font-weight: 600;
+    }
+
+    .review-note-text {
+      margin: 0;
+      font-size: 0.98rem;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      color: #eef4f8;
+    }
+
+    .score-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    @media (max-width: 520px) {
+      .score-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    .score-btn {
+      border-radius: 12px;
+      padding: 10px 0;
+      background: #121920;
+      border: 1px solid rgba(74, 89, 103, 0.9);
+      box-shadow: none;
+      color: #e5edf3;
+      font-weight: 600;
+    }
+
+    .score-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: none;
+      border-color: rgba(111, 142, 168, 0.8);
+    }
+
+    .review-empty {
+      padding: 16px 14px;
+      border-radius: 12px;
+      border: 1px dashed rgba(74, 89, 103, 0.8);
+      background: rgba(17, 23, 30, 0.6);
+      color: #9fb0bd;
+      font-size: 0.88rem;
+    }
+
     details.month-block {
       border-radius: 10px;
       border: 1px solid rgba(53, 65, 76, 0.85);
@@ -365,6 +451,14 @@
       justify-content: space-between;
       align-items: center;
       gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .note-meta-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
     }
 
     .note-meta {
@@ -407,6 +501,12 @@
 
     <main class="layout">
       <section class="panel panel-left">
+        <h2>Rank random notes</h2>
+
+        <div id="reviewBox" class="review-card"></div>
+
+        <hr style="margin: 4px 0 8px; border: none; border-top: 1px solid rgba(74, 89, 103, 0.7);" />
+
         <h2>New note</h2>
 
         <label for="noteInput">Note</label>
@@ -454,6 +554,11 @@
 
         <div class="export-block" aria-label="Export notes">
           <div class="export-row">
+            <button id="exportRankedPdfBtn">Export ranked PDF</button>
+            <button id="exportRankedTxtBtn" class="secondary">Export ranked .txt</button>
+          </div>
+
+          <div class="export-row">
             <button id="exportAllBtn" class="secondary">Export all .txt</button>
           </div>
 
@@ -498,6 +603,7 @@
       const STORAGE_KEY = "slipboxNotes";
       const IMPORT_YEAR = 2025;
       let notes = [];
+      let currentReviewNoteId = null;
 
       const MONTH_NAMES = [
         "January","February","March","April","May","June",
@@ -517,7 +623,8 @@
             notes = parsed.map(n => ({
               id: n.id,
               text: n.text || "",
-              createdAt: n.createdAt || new Date().toISOString()
+              createdAt: n.createdAt || new Date().toISOString(),
+              relevanceScore: Number.isInteger(n.relevanceScore) ? n.relevanceScore : null
             }));
           } else {
             notes = [];
@@ -547,7 +654,8 @@
         const note = {
           id: Date.now() + Math.random(),
           text: baseText,
-          createdAt: createdDate.toISOString()
+          createdAt: createdDate.toISOString(),
+          relevanceScore: null
         };
 
         notes.unshift(note);
@@ -558,13 +666,60 @@
         const idx = notes.findIndex(n => String(n.id) === String(noteId));
         if (idx === -1) return;
         notes.splice(idx, 1);
+        if (String(currentReviewNoteId) === String(noteId)) currentReviewNoteId = null;
         saveNotes();
+      }
+
+      function setRelevance(noteId, score) {
+        const note = notes.find(n => String(n.id) === String(noteId));
+        if (!note) return false;
+        note.relevanceScore = score;
+        if (String(currentReviewNoteId) === String(noteId)) currentReviewNoteId = null;
+        saveNotes();
+        return true;
+      }
+
+      function getUnratedNotes() {
+        return notes.filter(note => !Number.isInteger(note.relevanceScore));
+      }
+
+      function getRatedNotes() {
+        return notes.filter(note => Number.isInteger(note.relevanceScore));
+      }
+
+      function pickRandomUnratedNote() {
+        const unrated = getUnratedNotes();
+        if (!unrated.length) return null;
+        const randomIndex = Math.floor(Math.random() * unrated.length);
+        return unrated[randomIndex];
+      }
+
+      function getCurrentReviewNote() {
+        if (currentReviewNoteId !== null) {
+          const existing = notes.find(n => String(n.id) === String(currentReviewNoteId) && !Number.isInteger(n.relevanceScore));
+          if (existing) return existing;
+        }
+        const next = pickRandomUnratedNote();
+        currentReviewNoteId = next ? next.id : null;
+        return next;
       }
 
       function formatTime(isoString) {
         const d = new Date(isoString);
         if (isNaN(d.getTime())) return "";
         return d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+      }
+
+      function formatDateTime(isoString) {
+        const d = new Date(isoString);
+        if (isNaN(d.getTime())) return "";
+        return d.toLocaleString(undefined, {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit"
+        });
       }
 
       function formatGeneratedStamp() {
@@ -592,6 +747,15 @@
         a.click();
         a.remove();
         URL.revokeObjectURL(url);
+      }
+
+      function escapeHtml(value) {
+        return String(value || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
       }
 
       function getMonthKey(d) {
@@ -738,10 +902,170 @@
         return lines.join("\n").replace(/\n{3,}/g, "\n\n");
       }
 
+      function buildRankedTxt(noteList) {
+        if (!noteList.length) return "";
+
+        const lines = [];
+        lines.push("SLIPBOX RANKED EXPORT");
+        lines.push(`Generated: ${formatGeneratedStamp()}`);
+        lines.push("");
+
+        for (let score = 10; score >= 1; score--) {
+          const sectionNotes = noteList.filter(note => note.relevanceScore === score);
+          if (!sectionNotes.length) continue;
+
+          lines.push(`RELEVANCE ${score}`);
+          lines.push("");
+
+          sectionNotes
+            .slice()
+            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+            .forEach((note, index) => {
+              lines.push(`${index + 1}. ${note.text}`);
+              lines.push(`   ${formatDateTime(note.createdAt)}`);
+              lines.push("");
+            });
+        }
+
+        return lines.join("\n").replace(/\n{3,}/g, "\n\n").trim() + "\n";
+      }
+
       function exportAllTxt() {
         if (!notes.length) return { ok: false, msg: "No notes to export." };
         const txt = buildTxtFromNotes(notes.slice(), { title: "ALL NOTES" });
         downloadTextFile(`slipbox_all_export_${safeFileStamp()}.txt`, txt);
+        return { ok: true };
+      }
+
+      function exportRankedTxt() {
+        const rated = getRatedNotesSorted();
+        if (!rated.length) return { ok: false, msg: "No ranked notes yet." };
+        const txt = buildRankedTxt(rated);
+        downloadTextFile(`slipbox_ranked_export_${safeFileStamp()}.txt`, txt);
+        return { ok: true };
+      }
+
+      function getRatedNotesSorted() {
+        return getRatedNotes().slice().sort((a, b) => {
+          if (b.relevanceScore !== a.relevanceScore) return b.relevanceScore - a.relevanceScore;
+          return new Date(b.createdAt) - new Date(a.createdAt);
+        });
+      }
+
+      function exportRankedPdf() {
+        const rated = getRatedNotesSorted();
+        if (!rated.length) return { ok: false, msg: "No ranked notes yet." };
+
+        const sections = [];
+        for (let score = 10; score >= 1; score--) {
+          const sectionNotes = rated.filter(note => note.relevanceScore === score);
+          if (!sectionNotes.length) continue;
+
+          const items = sectionNotes.map((note, index) => `
+            <article class="item">
+              <div class="item-top">
+                <span class="score">Score ${score}</span>
+                <span class="date">${escapeHtml(formatDateTime(note.createdAt))}</span>
+              </div>
+              <div class="index">#${index + 1}</div>
+              <p>${escapeHtml(note.text).replace(/\n/g, "<br>")}</p>
+            </article>
+          `).join("");
+
+          sections.push(`
+            <section class="section">
+              <h2>Relevance ${score}</h2>
+              ${items}
+            </section>
+          `);
+        }
+
+        const html = `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="UTF-8">
+            <title>Slipbox Ranked Export</title>
+            <style>
+              body {
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+                margin: 32px;
+                color: #111827;
+              }
+              h1 {
+                margin: 0 0 6px;
+                font-size: 28px;
+              }
+              .meta {
+                color: #4b5563;
+                margin-bottom: 24px;
+                font-size: 14px;
+              }
+              .section {
+                margin-bottom: 28px;
+                page-break-inside: avoid;
+              }
+              .section h2 {
+                margin: 0 0 12px;
+                padding-bottom: 6px;
+                border-bottom: 1px solid #d1d5db;
+                font-size: 18px;
+              }
+              .item {
+                border: 1px solid #d1d5db;
+                border-radius: 10px;
+                padding: 12px;
+                margin-bottom: 10px;
+                page-break-inside: avoid;
+              }
+              .item-top {
+                display: flex;
+                justify-content: space-between;
+                gap: 12px;
+                margin-bottom: 8px;
+                font-size: 12px;
+                color: #4b5563;
+              }
+              .score {
+                font-weight: 700;
+                color: #111827;
+              }
+              .index {
+                font-size: 12px;
+                color: #6b7280;
+                margin-bottom: 6px;
+              }
+              p {
+                margin: 0;
+                line-height: 1.55;
+                white-space: normal;
+                word-break: break-word;
+              }
+              @media print {
+                body { margin: 18mm; }
+              }
+            </style>
+          </head>
+          <body>
+            <h1>Slipbox Ranked Notes</h1>
+            <div class="meta">Generated ${escapeHtml(formatGeneratedStamp())} · ${rated.length} ranked note${rated.length !== 1 ? "s" : ""}</div>
+            ${sections.join("")}
+            <script>
+              window.onload = () => window.print();
+            <\/script>
+          </body>
+          </html>
+        `;
+
+        const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const win = window.open(url, "_blank");
+        if (!win) {
+          URL.revokeObjectURL(url);
+          return { ok: false, msg: "Pop-up blocked. Allow pop-ups, then try again." };
+        }
+
+        setTimeout(() => URL.revokeObjectURL(url), 60000);
         return { ok: true };
       }
 
@@ -945,7 +1269,8 @@
           notes.push({
             id: Date.now() + Math.random(),
             text: textVal,
-            createdAt: iso
+            createdAt: iso,
+            relevanceScore: null
           });
 
           existing.add(key);
@@ -956,6 +1281,118 @@
         saveNotes();
 
         return { ok: true, imported, skipped };
+      }
+
+      function renderReviewBox() {
+        const reviewBox = document.getElementById("reviewBox");
+        const note = getCurrentReviewNote();
+
+        if (!note) {
+          reviewBox.innerHTML = `
+            <div class="review-empty">
+              Every note has been ranked. You can keep adding notes, delete notes from the list, or export your ranked PDF.
+            </div>
+          `;
+          return;
+        }
+
+        reviewBox.innerHTML = "";
+
+        const topRow = document.createElement("div");
+        topRow.className = "review-top-row";
+
+        const title = document.createElement("div");
+        title.className = "review-badge";
+        title.textContent = "Random note";
+
+        const meta = document.createElement("div");
+        meta.className = "hint";
+        meta.textContent = formatDateTime(note.createdAt);
+
+        topRow.appendChild(title);
+        topRow.appendChild(meta);
+
+        const p = document.createElement("p");
+        p.className = "review-note-text";
+        p.textContent = note.text;
+
+        const metaRow = document.createElement("div");
+        metaRow.className = "review-meta-row";
+
+        const leftHint = document.createElement("div");
+        leftHint.className = "hint";
+        leftHint.textContent = "Rank it once and it won't show up here again.";
+
+        const remaining = document.createElement("div");
+        remaining.className = "hint";
+        remaining.textContent = `${getUnratedNotes().length} unrated remaining`;
+
+        metaRow.appendChild(leftHint);
+        metaRow.appendChild(remaining);
+
+        const scoreGrid = document.createElement("div");
+        scoreGrid.className = "score-grid";
+
+        for (let score = 10; score >= 1; score--) {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "score-btn";
+          btn.textContent = String(score);
+          btn.title = score === 10 ? "Very relevant" : score === 1 ? "Not relevant at all" : `Relevance ${score}`;
+          btn.addEventListener("click", () => {
+            setRelevance(note.id, score);
+            renderReviewBox();
+            renderNotes(document.getElementById("searchInput").value);
+            refreshCounts();
+          });
+          scoreGrid.appendChild(btn);
+        }
+
+        const actions = document.createElement("div");
+        actions.className = "review-actions";
+
+        const legend = document.createElement("div");
+        legend.className = "hint";
+        legend.textContent = "10 = very relevant · 1 = not relevant at all";
+
+        const rightActions = document.createElement("div");
+        rightActions.style.display = "flex";
+        rightActions.style.gap = "8px";
+        rightActions.style.flexWrap = "wrap";
+
+        const skipBtn = document.createElement("button");
+        skipBtn.type = "button";
+        skipBtn.className = "secondary";
+        skipBtn.textContent = "Skip";
+        skipBtn.addEventListener("click", () => {
+          currentReviewNoteId = null;
+          renderReviewBox();
+        });
+
+        const delBtn = document.createElement("button");
+        delBtn.type = "button";
+        delBtn.className = "danger";
+        delBtn.textContent = "Delete note";
+        delBtn.addEventListener("click", () => {
+          const ok = confirm("Delete this note? This can’t be undone.");
+          if (!ok) return;
+          deleteNote(note.id);
+          renderReviewBox();
+          renderNotes(document.getElementById("searchInput").value);
+          refreshCounts();
+        });
+
+        rightActions.appendChild(skipBtn);
+        rightActions.appendChild(delBtn);
+
+        actions.appendChild(legend);
+        actions.appendChild(rightActions);
+
+        reviewBox.appendChild(topRow);
+        reviewBox.appendChild(p);
+        reviewBox.appendChild(metaRow);
+        reviewBox.appendChild(scoreGrid);
+        reviewBox.appendChild(actions);
       }
 
       function renderNotes(filterValue = "") {
@@ -1032,6 +1469,9 @@
             dayInner.className = "day-inner";
 
             const sortedDayNotes = dayNotes.slice().sort((a, b) => {
+              if ((b.relevanceScore || 0) !== (a.relevanceScore || 0)) {
+                return (b.relevanceScore || 0) - (a.relevanceScore || 0);
+              }
               return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
             });
 
@@ -1042,9 +1482,19 @@
               const headerRow = document.createElement("div");
               headerRow.className = "note-header-row";
 
+              const leftWrap = document.createElement("div");
+              leftWrap.className = "note-meta-wrap";
+
               const meta = document.createElement("div");
               meta.className = "note-meta";
               meta.textContent = formatTime(note.createdAt);
+
+              const score = document.createElement("span");
+              score.className = "score-badge";
+              score.textContent = Number.isInteger(note.relevanceScore) ? `R${note.relevanceScore}` : "Unrated";
+
+              leftWrap.appendChild(meta);
+              leftWrap.appendChild(score);
 
               const delBtn = document.createElement("button");
               delBtn.className = "danger delete-note-btn";
@@ -1054,11 +1504,12 @@
                 const ok = confirm("Delete this note? This can’t be undone.");
                 if (!ok) return;
                 deleteNote(note.id);
+                renderReviewBox();
                 renderNotes(document.getElementById("searchInput").value);
                 refreshCounts();
               });
 
-              headerRow.appendChild(meta);
+              headerRow.appendChild(leftWrap);
               headerRow.appendChild(delBtn);
 
               const text = document.createElement("p");
@@ -1085,7 +1536,10 @@
       }
 
       function refreshCounts() {
-        setHint("exportHint", notes.length ? `${notes.length} note${notes.length !== 1 ? "s" : ""} total` : "No notes yet");
+        const total = notes.length;
+        const rated = getRatedNotes().length;
+        const unrated = getUnratedNotes().length;
+        setHint("exportHint", total ? `${total} total · ${rated} ranked · ${unrated} unrated` : "No notes yet");
       }
 
       function setup() {
@@ -1097,6 +1551,8 @@
         const pastNoteTimeInput = document.getElementById("pastNoteTime");
         const savePastButton = document.getElementById("savePastButton");
 
+        const exportRankedPdfBtn = document.getElementById("exportRankedPdfBtn");
+        const exportRankedTxtBtn = document.getElementById("exportRankedTxtBtn");
         const exportAllBtn = document.getElementById("exportAllBtn");
         const exportDayInput = document.getElementById("exportDayInput");
         const exportDayBtn = document.getElementById("exportDayBtn");
@@ -1114,6 +1570,7 @@
           if (!text) return;
           createNote(text);
           noteInput.value = "";
+          renderReviewBox();
           renderNotes(searchInput.value);
           refreshCounts();
         });
@@ -1136,12 +1593,24 @@
 
           createNote(text, timestamp);
           pastNoteInput.value = "";
+          pastNoteTimeInput.value = "";
+          renderReviewBox();
           renderNotes(searchInput.value);
           refreshCounts();
         });
 
         searchInput.addEventListener("input", () => {
           renderNotes(searchInput.value);
+        });
+
+        exportRankedPdfBtn.addEventListener("click", () => {
+          const res = exportRankedPdf();
+          if (!res.ok) alert(res.msg);
+        });
+
+        exportRankedTxtBtn.addEventListener("click", () => {
+          const res = exportRankedTxt();
+          if (!res.ok) alert(res.msg);
         });
 
         exportAllBtn.addEventListener("click", () => {
@@ -1195,6 +1664,7 @@
               alert(res.msg || "Import failed.");
               return;
             }
+            renderReviewBox();
             renderNotes(searchInput.value);
             refreshCounts();
             setHint("importHint", `Imported ${res.imported}. Skipped ${res.skipped}.`);
@@ -1207,6 +1677,7 @@
 
         loadNotes();
         saveNotes();
+        renderReviewBox();
         renderNotes();
         refreshCounts();
       }
