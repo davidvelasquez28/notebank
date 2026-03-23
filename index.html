@@ -9,15 +9,18 @@
     :root {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
                    "Segoe UI", sans-serif;
-      color-scheme: light dark;
+      color-scheme: dark;
     }
+
     * { box-sizing: border-box; }
 
     body {
       margin: 0;
       min-height: 100vh;
-      background: #0f172a;
-      color: #e5e7eb;
+      background:
+        radial-gradient(circle at top, rgba(76, 99, 122, 0.18), transparent 35%),
+        linear-gradient(180deg, #0f141a 0%, #111821 100%);
+      color: #dbe3ea;
       display: flex;
       justify-content: center;
       padding: 24px;
@@ -26,12 +29,12 @@
     .app {
       max-width: 1100px;
       width: 100%;
-      background: rgba(15, 23, 42, 0.95);
+      background: rgba(18, 24, 32, 0.96);
       border-radius: 18px;
       padding: 20px 22px 24px;
       box-shadow:
-        0 18px 45px rgba(0, 0, 0, 0.55),
-        0 0 0 1px rgba(148, 163, 184, 0.2);
+        0 18px 45px rgba(0, 0, 0, 0.42),
+        0 0 0 1px rgba(112, 130, 148, 0.22);
       display: flex;
       flex-direction: column;
       gap: 18px;
@@ -42,7 +45,7 @@
       justify-content: space-between;
       align-items: center;
       padding-bottom: 8px;
-      border-bottom: 1px solid rgba(148, 163, 184, 0.35);
+      border-bottom: 1px solid rgba(103, 120, 136, 0.28);
     }
 
     .title {
@@ -50,9 +53,13 @@
       letter-spacing: 0.06em;
       text-transform: uppercase;
       font-weight: 600;
+      color: #eef4f8;
     }
 
-    .subtitle { font-size: 0.8rem; color: #9ca3af; }
+    .subtitle {
+      font-size: 0.8rem;
+      color: #8f9eab;
+    }
 
     main.layout {
       display: flex;
@@ -68,10 +75,10 @@
     }
 
     .panel {
-      background: rgba(15, 23, 42, 0.7);
+      background: rgba(24, 31, 40, 0.82);
       border-radius: 14px;
       padding: 16px 14px 14px;
-      border: 1px solid rgba(51, 65, 85, 0.9);
+      border: 1px solid rgba(70, 84, 97, 0.8);
       display: flex;
       flex-direction: column;
       gap: 10px;
@@ -84,83 +91,40 @@
       font-size: 0.9rem;
       text-transform: uppercase;
       letter-spacing: 0.07em;
-      color: #9ca3af;
+      color: #8f9eab;
       margin: 0;
     }
 
-    label { font-size: 0.85rem; color: #cbd5f5; }
+    label {
+      font-size: 0.85rem;
+      color: #c6d1da;
+    }
 
-    textarea {
+    textarea,
+    .search-input,
+    .export-row input,
+    .export-row select,
+    #pastNoteTime {
       width: 100%;
       resize: vertical;
       padding: 10px 11px;
       border-radius: 10px;
-      border: 1px solid rgba(51, 65, 85, 0.9);
-      background: #020617;
-      color: #e5e7eb;
+      border: 1px solid rgba(74, 89, 103, 0.9);
+      background: #0d1218;
+      color: #e5edf3;
       font-family: inherit;
       font-size: 0.9rem;
       line-height: 1.4;
       outline: none;
     }
 
-    textarea:focus {
-      border-color: #6366f1;
-      box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.6);
-    }
-
-    .category-row {
-      margin-top: 6px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .category-options {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 2px;
-    }
-
-    .category-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      padding: 4px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(55, 65, 81, 0.9);
-      background: #020617;
-      cursor: pointer;
-      font-size: 0.78rem;
-      user-select: none;
-    }
-
-    .category-pill input { accent-color: #6366f1; }
-
-    .category-pill--active {
-      border-color: #6366f1;
-      background: rgba(79, 70, 229, 0.15);
-    }
-
-    .tag-help {
-      margin-top: 6px;
-      padding: 10px 10px;
-      border-radius: 12px;
-      border: 1px solid rgba(51, 65, 85, 0.9);
-      background: rgba(2, 6, 23, 0.85);
-      color: #cbd5f5;
-      font-size: 0.82rem;
-      line-height: 1.35;
-    }
-
-    .tag-help strong {
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      font-size: 0.75rem;
-      color: #9ca3af;
-      display: block;
-      margin-bottom: 6px;
+    textarea:focus,
+    .search-input:focus,
+    .export-row input:focus,
+    .export-row select:focus,
+    #pastNoteTime:focus {
+      border-color: #6f8ea8;
+      box-shadow: 0 0 0 1px rgba(111, 142, 168, 0.5);
     }
 
     .controls {
@@ -178,35 +142,36 @@
       padding: 8px 18px;
       font-size: 0.9rem;
       font-weight: 500;
-      background: linear-gradient(135deg, #6366f1, #7c3aed);
+      background: linear-gradient(135deg, #5f7488, #7c94aa);
       color: white;
       cursor: pointer;
       transition: transform 0.06s ease, box-shadow 0.06s ease, opacity 0.08s;
-      box-shadow: 0 8px 18px rgba(79, 70, 229, 0.5);
+      box-shadow: 0 8px 18px rgba(70, 90, 109, 0.35);
       white-space: nowrap;
     }
 
     button:hover {
       transform: translateY(-1px);
-      box-shadow: 0 12px 28px rgba(79, 70, 229, 0.7);
+      box-shadow: 0 12px 28px rgba(70, 90, 109, 0.45);
     }
 
     button:active {
       transform: translateY(0);
-      box-shadow: 0 5px 14px rgba(79, 70, 229, 0.6);
+      box-shadow: 0 5px 14px rgba(70, 90, 109, 0.32);
       opacity: 0.95;
     }
 
     button.secondary {
-      background: rgba(2, 6, 23, 1);
-      border: 1px solid rgba(55, 65, 81, 0.9);
+      background: #121920;
+      border: 1px solid rgba(74, 89, 103, 0.9);
       box-shadow: none;
+      color: #d7e0e8;
     }
 
     button.secondary:hover {
       transform: translateY(-1px);
       box-shadow: none;
-      border-color: rgba(99, 102, 241, 0.8);
+      border-color: rgba(111, 142, 168, 0.8);
     }
 
     button.secondary:active {
@@ -215,31 +180,37 @@
     }
 
     button.danger {
-      background: rgba(2, 6, 23, 1);
-      border: 1px solid rgba(239, 68, 68, 0.75);
+      background: #121920;
+      border: 1px solid rgba(186, 95, 95, 0.7);
       box-shadow: none;
-      color: #fecaca;
+      color: #f1c1c1;
     }
+
     button.danger:hover {
       transform: translateY(-1px);
       box-shadow: none;
-      border-color: rgba(239, 68, 68, 1);
+      border-color: rgba(186, 95, 95, 1);
     }
+
     button.danger:active {
       transform: translateY(0);
       opacity: 0.95;
     }
 
-    .hint { font-size: 0.75rem; color: #9ca3af; }
+    .hint {
+      font-size: 0.75rem;
+      color: #8f9eab;
+    }
 
     .kbd {
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
         "Liberation Mono", "Courier New", monospace;
       font-size: 0.75rem;
-      background: rgba(15, 23, 42, 0.9);
+      background: rgba(22, 29, 37, 0.95);
       padding: 2px 7px;
       border-radius: 4px;
-      border: 1px solid rgba(75, 85, 99, 0.9);
+      border: 1px solid rgba(80, 95, 108, 0.75);
+      color: #d9e2e9;
     }
 
     .search-row {
@@ -249,19 +220,9 @@
     }
 
     .search-input {
-      width: 100%;
-      padding: 8px 10px;
       border-radius: 999px;
-      border: 1px solid rgba(51, 65, 85, 0.9);
-      background: #020617;
-      color: #e5e7eb;
+      padding: 8px 10px;
       font-size: 0.85rem;
-      outline: none;
-    }
-
-    .search-input:focus {
-      border-color: #6366f1;
-      box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.6);
     }
 
     .notes-list {
@@ -294,24 +255,14 @@
       min-width: 180px;
       padding: 8px 10px;
       border-radius: 999px;
-      border: 1px solid rgba(51, 65, 85, 0.9);
-      background: #020617;
-      color: #e5e7eb;
       font-size: 0.85rem;
-      outline: none;
       cursor: pointer;
-    }
-
-    .export-row input:focus,
-    .export-row select:focus {
-      border-color: #6366f1;
-      box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.6);
     }
 
     details.month-block {
       border-radius: 10px;
-      border: 1px solid rgba(31, 41, 55, 0.9);
-      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(53, 65, 76, 0.85);
+      background: rgba(19, 25, 33, 0.9);
       padding: 4px 8px 6px;
     }
 
@@ -326,7 +277,7 @@
       font-size: 0.85rem;
       text-transform: uppercase;
       letter-spacing: 0.06em;
-      color: #9ca3af;
+      color: #95a4b1;
     }
 
     summary.month-summary::-webkit-details-marker { display: none; }
@@ -339,14 +290,19 @@
       font-size: 0.7rem;
     }
 
-    details[open] > summary .month-summary-title::before { transform: rotate(90deg); }
+    details[open] > summary .month-summary-title::before {
+      transform: rotate(90deg);
+    }
 
-    .month-summary-count { font-size: 0.75rem; color: #6b7280; }
+    .month-summary-count {
+      font-size: 0.75rem;
+      color: #72808c;
+    }
 
     .month-inner {
       margin-top: 4px;
       padding-left: 4px;
-      border-left: 1px solid rgba(31, 41, 55, 0.7);
+      border-left: 1px solid rgba(57, 69, 80, 0.7);
       display: flex;
       flex-direction: column;
       gap: 4px;
@@ -365,7 +321,7 @@
       justify-content: space-between;
       align-items: baseline;
       font-size: 0.8rem;
-      color: #d1d5db;
+      color: #d0dbe4;
     }
 
     summary.day-summary::-webkit-details-marker { display: none; }
@@ -378,9 +334,14 @@
       font-size: 0.7rem;
     }
 
-    details.day-block[open] > summary .day-summary-title::before { transform: rotate(90deg); }
+    details.day-block[open] > summary .day-summary-title::before {
+      transform: rotate(90deg);
+    }
 
-    .day-summary-count { font-size: 0.75rem; color: #9ca3af; }
+    .day-summary-count {
+      font-size: 0.75rem;
+      color: #8f9eab;
+    }
 
     .day-inner {
       margin-top: 2px;
@@ -390,10 +351,10 @@
     }
 
     .note {
-      padding: 7px 9px;
+      padding: 8px 10px;
       border-radius: 10px;
-      background: rgba(15, 23, 42, 0.9);
-      border: 1px solid rgba(55, 65, 81, 0.9);
+      background: rgba(17, 23, 30, 0.94);
+      border: 1px solid rgba(67, 81, 94, 0.85);
       display: flex;
       flex-direction: column;
       gap: 6px;
@@ -406,31 +367,9 @@
       gap: 8px;
     }
 
-    .note-meta { font-size: 0.75rem; color: #9ca3af; }
-
-    .note-tag-edit {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      margin-left: auto;
-    }
-
-    .note-tag-select {
-      padding: 4px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(55, 65, 81, 0.9);
-      background: #020617;
-      color: #e5e7eb;
+    .note-meta {
       font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      outline: none;
-      cursor: pointer;
-    }
-
-    .note-tag-select:focus {
-      border-color: rgba(99, 102, 241, 0.9);
-      box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.45);
+      color: #8f9eab;
     }
 
     .delete-note-btn {
@@ -445,9 +384,14 @@
       font-size: 0.9rem;
       white-space: pre-wrap;
       word-wrap: break-word;
+      color: #e6edf3;
     }
 
-    .empty { font-size: 0.8rem; color: #6b7280; padding: 12px 4px; }
+    .empty {
+      font-size: 0.8rem;
+      color: #72808c;
+      padding: 12px 4px;
+    }
   </style>
 </head>
 
@@ -462,22 +406,11 @@
     </header>
 
     <main class="layout">
-      <!-- LEFT -->
       <section class="panel panel-left">
         <h2>New note</h2>
 
         <label for="noteInput">Note</label>
         <textarea id="noteInput" placeholder="Type anything you’d normally email yourself..."></textarea>
-
-        <div class="category-row">
-          <label>Category (required)</label>
-          <div class="category-options" id="categoryOptions"></div>
-
-          <div id="tagHelp" class="tag-help" aria-live="polite">
-            <strong>Tag guidance</strong>
-            Pick a tag to see what belongs there.
-          </div>
-        </div>
 
         <div class="controls">
           <button id="saveButton">Save note</button>
@@ -489,9 +422,9 @@
           </div>
         </div>
 
-        <hr style="margin: 14px 0; border: none; border-top: 1px solid rgba(51,65,85,0.8);" />
+        <hr style="margin: 14px 0; border: none; border-top: 1px solid rgba(74, 89, 103, 0.7);" />
 
-        <h2 style="font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.07em; color: #9ca3af; margin: 0 0 4px;">
+        <h2 style="font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.07em; color: #8f9eab; margin: 0 0 4px;">
           Add past note
         </h2>
 
@@ -499,28 +432,13 @@
         <textarea id="pastNoteInput" placeholder="Paste an old note here..."></textarea>
 
         <label for="pastNoteTime" style="margin-top: 6px;">Timestamp (past)</label>
-        <input
-          id="pastNoteTime"
-          type="datetime-local"
-          style="
-            width: 100%;
-            padding: 8px 10px;
-            border-radius: 10px;
-            border: 1px solid rgba(51, 65, 85, 0.9);
-            background: #020617;
-            color: #e5e7eb;
-            font-size: 0.85rem;
-            outline: none;
-            margin-top: 2px;
-          "
-        />
+        <input id="pastNoteTime" type="datetime-local" />
 
         <div class="controls" style="margin-top: 6px;">
           <button id="savePastButton">Save past note</button>
         </div>
       </section>
 
-      <!-- RIGHT -->
       <section class="panel panel-right">
         <h2>Notes</h2>
 
@@ -530,7 +448,7 @@
             id="searchInput"
             class="search-input"
             type="text"
-            placeholder="Search text or category..."
+            placeholder="Search notes..."
           />
         </div>
 
@@ -561,10 +479,9 @@
             <button id="exportWeekBtn" class="secondary">Export week .txt</button>
           </div>
 
-          <!-- CSV import -->
           <div class="export-row">
             <input id="csvInput" type="file" accept=".csv,text/csv" />
-            <button id="importCsvBtn" class="secondary">Import CSV → Inbox</button>
+            <button id="importCsvBtn" class="secondary">Import CSV</button>
           </div>
 
           <div id="exportHint" class="hint"></div>
@@ -579,7 +496,7 @@
   <script>
     (function () {
       const STORAGE_KEY = "slipboxNotes";
-      const IMPORT_YEAR = 2025; // all CSV notes assumed to be from 2025
+      const IMPORT_YEAR = 2025;
       let notes = [];
 
       const MONTH_NAMES = [
@@ -587,49 +504,20 @@
         "July","August","September","October","November","December"
       ];
 
-      // Added "Inbox" for untagged imports + unprocessed notes
-      const CATEGORIES = [
-        { value: "inbox", label: "Inbox", help: "Imported / untagged notes. Work through these and assign the right tag when you’re ready." },
-        { value: "goals", label: "Goals", help: "Outcomes you want. Targets, milestones, who you’re trying to become." },
-        { value: "systems", label: "Systems", help: "How you operate. Routines, rules, checklists, frameworks, processes." },
-        { value: "mindset", label: "Mindset", help: "Inner world. Emotions, self-awareness, patterns, psychology, reflections." },
-        { value: "relationships", label: "Relationships", help: "People + how you handle them. Communication, boundaries, family/friends/dating." },
-        { value: "todo", label: "To-Do", help: "Action items. Tasks you can complete/check off. If it’s executable, it goes here." },
-        { value: "trading", label: "Trading", help: "Trading-specific notes. Setups, rules, journal notes, market observations, execution notes." },
-        { value: "crypto", label: "Crypto", help: "Crypto-specific notes. Thesis, security/wallets, DCA plans, watchlists, custody notes." },
-        { value: "project_ideas", label: "Project Ideas", help: "Buildable ideas. App features, business/content concepts, product/brand ideas." },
-        { value: "random_thoughts", label: "Random Thoughts & Ideas", help: "Loose captures. Sparks, curiosities, half-formed ideas not yet a task/project." }
-      ];
-      const CATEGORY_VALUES = CATEGORIES.map(c => c.value);
-
-      function tagLabel(tag) {
-        const found = CATEGORIES.find(c => c.value === tag);
-        return found ? found.label : (tag || "");
-      }
-      function tagHelpText(tag) {
-        const found = CATEGORIES.find(c => c.value === tag);
-        return found ? found.help : "Pick a tag to see what belongs there.";
-      }
-
-      function normalizeCategory(rawCategory) {
-        const c = (rawCategory || "").toLowerCase().trim();
-        if (CATEGORY_VALUES.includes(c)) return c;
-        if (c === "other") return "random_thoughts";
-        if (!c) return "inbox";
-        return "inbox";
-      }
-
       function loadNotes() {
         const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) { notes = []; return; }
+        if (!raw) {
+          notes = [];
+          return;
+        }
+
         try {
           const parsed = JSON.parse(raw);
           if (Array.isArray(parsed)) {
             notes = parsed.map(n => ({
               id: n.id,
               text: n.text || "",
-              createdAt: n.createdAt || new Date().toISOString(),
-              category: normalizeCategory(n.category)
+              createdAt: n.createdAt || new Date().toISOString()
             }));
           } else {
             notes = [];
@@ -644,12 +532,7 @@
         localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
       }
 
-      function getSelectedCategory() {
-        const checked = document.querySelector('input[name="category"]:checked');
-        return checked ? checked.value : "";
-      }
-
-      function createNote(text, category, createdAtISO) {
+      function createNote(text, createdAtISO) {
         const baseText = (text || "").trim();
         if (!baseText) return;
 
@@ -664,19 +547,10 @@
         const note = {
           id: Date.now() + Math.random(),
           text: baseText,
-          category: normalizeCategory(category),
           createdAt: createdDate.toISOString()
         };
 
         notes.unshift(note);
-        saveNotes();
-      }
-
-      function updateNoteCategory(noteId, newCategory) {
-        const c = normalizeCategory(newCategory);
-        const idx = notes.findIndex(n => String(n.id) === String(noteId));
-        if (idx === -1) return;
-        notes[idx].category = c;
         saveNotes();
       }
 
@@ -720,13 +594,13 @@
         URL.revokeObjectURL(url);
       }
 
-      // ---------- Display grouping ----------
       function getMonthKey(d) {
         if (!(d instanceof Date) || isNaN(d.getTime())) return "unknown";
         const y = d.getFullYear();
         const m = String(d.getMonth() + 1).padStart(2, "0");
         return `${y}-${m}`;
       }
+
       function getDayKey(d) {
         if (!(d instanceof Date) || isNaN(d.getTime())) return "unknown";
         const y = d.getFullYear();
@@ -734,6 +608,7 @@
         const day = String(d.getDate()).padStart(2, "0");
         return `${y}-${m}-${day}`;
       }
+
       function getMonthLabelFromKey(key) {
         if (key === "unknown") return "Unknown";
         const [y, m] = key.split("-");
@@ -741,6 +616,7 @@
         const name = MONTH_NAMES[idx] || "Unknown";
         return `${name} ${y}`;
       }
+
       function getDayLabelFromKey(key) {
         if (key === "unknown") return "Unknown day";
         const [y, m, d] = key.split("-");
@@ -763,20 +639,22 @@
         return structure;
       }
 
-      // ---------- Export helpers ----------
       function localYMDFromDate(d) {
         return { y: d.getFullYear(), m: d.getMonth() + 1, d: d.getDate() };
       }
+
       function parseYMDString(yyyy_mm_dd) {
         const [y, m, d] = (yyyy_mm_dd || "").split("-").map(n => parseInt(n, 10));
         if (!y || !m || !d) return null;
         return { y, m, d };
       }
+
       function parseYMString(yyyy_mm) {
         const [y, m] = (yyyy_mm || "").split("-").map(n => parseInt(n, 10));
         if (!y || !m) return null;
         return { y, m };
       }
+
       function daysInMonth(year, month1to12) {
         return new Date(year, month1to12, 0).getDate();
       }
@@ -803,8 +681,6 @@
         });
       }
 
-      // Week-of-month:
-      // Week 1 = 1–7, Week 2 = 8–14, Week 3 = 15–21, Week 4 = 22–28, Week 5 = 29–end
       function getWeekRange(year, month1to12, weekNumber) {
         const last = daysInMonth(year, month1to12);
         const w = Math.min(Math.max(parseInt(weekNumber, 10) || 1, 1), 5);
@@ -851,7 +727,7 @@
 
             dayNotes.forEach(note => {
               const time = formatTime(note.createdAt);
-              lines.push(`[${time}] (${tagLabel(note.category).toUpperCase()}) ${note.text}`);
+              lines.push(`[${time}] ${note.text}`);
               lines.push("");
             });
           });
@@ -877,7 +753,6 @@
         return { ok: true };
       }
 
-      // Month export earliest -> latest (your preference)
       function exportMonthTxt(ymStr) {
         const list = getNotesForMonth(ymStr).slice().sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
         if (!list.length) return { ok: false, msg: "No notes found for that month." };
@@ -886,14 +761,11 @@
         const monthName = MONTH_NAMES[(target?.m || 1) - 1] || "Unknown";
         const title = `MONTH: ${monthName} ${target?.y || ""}`.trim();
 
-        // buildTxtFromNotes prints newest-first by day; for month we want a straight read.
-        // So we generate a simpler month-only text block in chronological order.
         const lines = [];
         lines.push(`SLIPBOX EXPORT — ${title}`);
         lines.push(`Generated: ${formatGeneratedStamp()}`);
         lines.push("");
 
-        // group by day ascending (YYYY-MM-DD asc)
         const byDay = {};
         list.forEach(n => {
           const d = new Date(n.createdAt);
@@ -902,13 +774,13 @@
           byDay[key].push(n);
         });
 
-        const dayKeys = Object.keys(byDay).sort((a, b) => a.localeCompare(b)); // earliest -> latest
+        const dayKeys = Object.keys(byDay).sort((a, b) => a.localeCompare(b));
         dayKeys.forEach(dayKey => {
           lines.push(`— ${getDayLabelFromKey(dayKey)} —`);
-          const dayNotes = byDay[dayKey].slice().sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt)); // earliest -> latest
+          const dayNotes = byDay[dayKey].slice().sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
           dayNotes.forEach(note => {
             const time = formatTime(note.createdAt);
-            lines.push(`[${time}] (${tagLabel(note.category).toUpperCase()}) ${note.text}`);
+            lines.push(`[${time}] ${note.text}`);
             lines.push("");
           });
           lines.push("");
@@ -934,9 +806,7 @@
         return { ok: true };
       }
 
-      // ---------- CSV import (timestamp + note, year assumed 2025, category -> inbox) ----------
       function parseCSV(text) {
-        // RFC-ish parser: supports commas + quotes + multiline quoted cells
         const rows = [];
         let row = [];
         let cell = "";
@@ -980,7 +850,6 @@
           rows.push(row);
         }
 
-        // trim BOM if present
         if (rows.length && rows[0].length && typeof rows[0][0] === "string") {
           rows[0][0] = rows[0][0].replace(/^\uFEFF/, "");
         }
@@ -995,10 +864,6 @@
       }
 
       function parseCsvTimestampToISO(tsRaw) {
-        // Expected format examples:
-        // "Sun, Aug 31, 11:58 PM"
-        // "Sun, Aug 31, 11:53 PM"
-        // We ignore day-of-week, assume IMPORT_YEAR.
         const s = String(tsRaw || "").trim();
         if (!s) return null;
 
@@ -1021,7 +886,7 @@
         return d.toISOString();
       }
 
-      async function importCsvFileToInbox(file) {
+      async function importCsvFile(file) {
         const text = await file.text();
         const rows = parseCSV(text).filter(r => r.some(cell => String(cell || "").trim() !== ""));
 
@@ -1032,12 +897,8 @@
         let imported = 0;
         let skipped = 0;
 
-        // Build de-dupe keys (timestamp + text)
         const existing = new Set(notes.map(n => `${n.createdAt}::${n.text}`));
 
-        // Two supported shapes:
-        // A) No header (your example): col0=timestamp, col1=note
-        // B) With header: tries to find timestamp+note columns
         const firstRowLower = rows[0].map(c => String(c || "").trim().toLowerCase());
         const looksLikeHeader = firstRowLower.some(h =>
           ["timestamp","time","date"].includes(h) || ["note","text","content"].includes(h)
@@ -1083,34 +944,26 @@
 
           notes.push({
             id: Date.now() + Math.random(),
-            text: textVal,          // preserves internal newlines
-            createdAt: iso,         // ISO storage like the rest of your app
-            category: "inbox"       // untagged bucket
+            text: textVal,
+            createdAt: iso
           });
 
           existing.add(key);
           imported++;
         }
 
-        // Keep newest-first in the app UI
         notes.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         saveNotes();
 
         return { ok: true, imported, skipped };
       }
 
-      // ---------- Render ----------
       function renderNotes(filterValue = "") {
         const listEl = document.getElementById("notesList");
         const query = filterValue.toLowerCase().trim();
 
         const filtered = query
-          ? notes.filter(n => {
-              const textMatch = (n.text || "").toLowerCase().includes(query);
-              const catMatch = (n.category || "").toLowerCase().includes(query);
-              const labelMatch = (tagLabel(n.category) || "").toLowerCase().includes(query);
-              return textMatch || catMatch || labelMatch;
-            })
+          ? notes.filter(n => (n.text || "").toLowerCase().includes(query))
           : notes;
 
         listEl.innerHTML = "";
@@ -1193,27 +1046,6 @@
               meta.className = "note-meta";
               meta.textContent = formatTime(note.createdAt);
 
-              const tagWrap = document.createElement("div");
-              tagWrap.className = "note-tag-edit";
-
-              const select = document.createElement("select");
-              select.className = "note-tag-select";
-              select.setAttribute("aria-label", "Change tag");
-
-              CATEGORY_VALUES.forEach(v => {
-                const opt = document.createElement("option");
-                opt.value = v;
-                opt.textContent = tagLabel(v).toUpperCase();
-                if ((note.category || "").toLowerCase() === v) opt.selected = true;
-                select.appendChild(opt);
-              });
-
-              select.addEventListener("change", () => {
-                updateNoteCategory(note.id, select.value);
-                renderNotes(document.getElementById("searchInput").value);
-                refreshCounts();
-              });
-
               const delBtn = document.createElement("button");
               delBtn.className = "danger delete-note-btn";
               delBtn.type = "button";
@@ -1226,11 +1058,8 @@
                 refreshCounts();
               });
 
-              tagWrap.appendChild(select);
-              tagWrap.appendChild(delBtn);
-
               headerRow.appendChild(meta);
-              headerRow.appendChild(tagWrap);
+              headerRow.appendChild(delBtn);
 
               const text = document.createElement("p");
               text.className = "note-text";
@@ -1250,48 +1079,6 @@
         });
       }
 
-      // ---------- Category UI ----------
-      function buildCategoryUI() {
-        const container = document.getElementById("categoryOptions");
-        container.innerHTML = "";
-
-        CATEGORIES.forEach((cat, idx) => {
-          const label = document.createElement("label");
-          label.className = "category-pill";
-
-          const input = document.createElement("input");
-          input.type = "radio";
-          input.name = "category";
-          input.value = cat.value;
-
-          // default selection: Goals (not Inbox)
-          if (cat.value === "goals") input.checked = true;
-
-          const span = document.createElement("span");
-          span.textContent = cat.label;
-
-          label.appendChild(input);
-          label.appendChild(span);
-          container.appendChild(label);
-        });
-
-        const helpBox = document.getElementById("tagHelp");
-
-        function syncActiveAndHelp() {
-          const checked = document.querySelector('input[name="category"]:checked');
-          const val = checked ? checked.value : "";
-          container.querySelectorAll(".category-pill").forEach(l => l.classList.remove("category-pill--active"));
-          if (checked) checked.closest(".category-pill")?.classList.add("category-pill--active");
-          helpBox.innerHTML = `<strong>Tag guidance</strong>${tagHelpText(val)}`;
-        }
-
-        container.querySelectorAll("input[type='radio']").forEach(input => {
-          input.addEventListener("change", syncActiveAndHelp);
-        });
-
-        syncActiveAndHelp();
-      }
-
       function setHint(id, msg) {
         const el = document.getElementById(id);
         if (el) el.textContent = msg || "";
@@ -1301,7 +1088,6 @@
         setHint("exportHint", notes.length ? `${notes.length} note${notes.length !== 1 ? "s" : ""} total` : "No notes yet");
       }
 
-      // ---------- Setup ----------
       function setup() {
         const noteInput = document.getElementById("noteInput");
         const saveButton = document.getElementById("saveButton");
@@ -1323,14 +1109,10 @@
         const csvInput = document.getElementById("csvInput");
         const importCsvBtn = document.getElementById("importCsvBtn");
 
-        buildCategoryUI();
-
         saveButton.addEventListener("click", () => {
           const text = noteInput.value.trim();
-          const category = getSelectedCategory();
           if (!text) return;
-          if (!category) { alert("Pick a category first."); return; }
-          createNote(text, category);
+          createNote(text);
           noteInput.value = "";
           renderNotes(searchInput.value);
           refreshCounts();
@@ -1345,13 +1127,14 @@
 
         savePastButton.addEventListener("click", () => {
           const text = pastNoteInput.value.trim();
-          const category = getSelectedCategory();
           const timestamp = (pastNoteTimeInput.value || "").trim();
           if (!text) return;
-          if (!category) { alert("Pick a category before saving a past note."); return; }
-          if (!timestamp) { alert("Set a timestamp for the past note."); return; }
+          if (!timestamp) {
+            alert("Set a timestamp for the past note.");
+            return;
+          }
 
-          createNote(text, category, timestamp);
+          createNote(text, timestamp);
           pastNoteInput.value = "";
           renderNotes(searchInput.value);
           refreshCounts();
@@ -1368,14 +1151,20 @@
 
         exportDayBtn.addEventListener("click", () => {
           const val = (exportDayInput.value || "").trim();
-          if (!val) { alert("Choose a day first."); return; }
+          if (!val) {
+            alert("Choose a day first.");
+            return;
+          }
           const res = exportDayTxt(val);
           if (!res.ok) alert(res.msg);
         });
 
         exportMonthBtn.addEventListener("click", () => {
           const ym = (exportMonthOnlyInput.value || "").trim();
-          if (!ym) { alert("Choose a month first."); return; }
+          if (!ym) {
+            alert("Choose a month first.");
+            return;
+          }
           const res = exportMonthTxt(ym);
           if (!res.ok) alert(res.msg);
         });
@@ -1383,18 +1172,24 @@
         exportWeekBtn.addEventListener("click", () => {
           const ym = (exportMonthInput.value || "").trim();
           const w = (exportWeekSelect.value || "1").trim();
-          if (!ym) { alert("Choose a month first."); return; }
+          if (!ym) {
+            alert("Choose a month first.");
+            return;
+          }
           const res = exportWeekTxt(ym, w);
           if (!res.ok) alert(res.msg);
         });
 
         importCsvBtn.addEventListener("click", async () => {
           const file = csvInput.files && csvInput.files[0];
-          if (!file) { alert("Choose a CSV file first."); return; }
+          if (!file) {
+            alert("Choose a CSV file first.");
+            return;
+          }
 
           setHint("importHint", "Importing…");
           try {
-            const res = await importCsvFileToInbox(file);
+            const res = await importCsvFile(file);
             if (!res.ok) {
               setHint("importHint", "");
               alert(res.msg || "Import failed.");
@@ -1402,7 +1197,7 @@
             }
             renderNotes(searchInput.value);
             refreshCounts();
-            setHint("importHint", `Imported ${res.imported}. Skipped ${res.skipped}. (Imported notes go to INBOX)`);
+            setHint("importHint", `Imported ${res.imported}. Skipped ${res.skipped}.`);
           } catch (e) {
             console.error(e);
             setHint("importHint", "");
@@ -1411,7 +1206,7 @@
         });
 
         loadNotes();
-        saveNotes(); // normalize categories / migrate
+        saveNotes();
         renderNotes();
         refreshCounts();
       }
