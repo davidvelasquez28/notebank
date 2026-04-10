@@ -593,7 +593,6 @@
         </div>
         <div class="sidebar-body hidden" id="exportBody">
           <div class="export-group">
-            <button class="btn-accent2" id="exportRankedTxtBtn">Export ranked .txt</button>
             <button class="btn-secondary" id="exportAllBtn">Export all .txt</button>
           </div>
 
@@ -846,14 +845,6 @@
         return { ok: true };
       }
 
-      function exportRankedTxt() {
-        const rated = getRatedNotesSorted();
-        if (!rated.length) return { ok: false, msg: "No ranked notes yet." };
-        const txt = buildRankedTxt(rated);
-        downloadTextFile(`slipbox_ranked_export_${safeFileStamp()}.txt`, txt);
-        return { ok: true };
-      }
-
       function exportMonthTxt(ymStr) {
         const list = getNotesForMonth(ymStr).slice().sort((a,b) => new Date(a.createdAt)-new Date(b.createdAt));
         if (!list.length) return { ok: false, msg: "No notes found for that month." };
@@ -994,7 +985,7 @@
           const monthDays=structure[monthKey];
           const monthDetails=document.createElement("details");
           monthDetails.className="month-block";
-          monthDetails.open=true;
+          monthDetails.open=false;
 
           const monthSummary=document.createElement("summary");
           monthSummary.className="month-summary";
@@ -1011,7 +1002,7 @@
             const dayNotes=monthDays[dayKey];
             const dayDetails=document.createElement("details");
             dayDetails.className="day-block";
-            dayDetails.open=true;
+            dayDetails.open=false;
 
             const daySummary=document.createElement("summary");
             daySummary.className="day-summary";
@@ -1141,11 +1132,6 @@
 
         searchInput.addEventListener("input",()=>{
           renderNotes(searchInput.value);
-        });
-
-        document.getElementById("exportRankedTxtBtn").addEventListener("click",()=>{
-          const res=exportRankedTxt();
-          if (!res.ok) showToast(res.msg);
         });
 
         document.getElementById("exportAllBtn").addEventListener("click",()=>{
