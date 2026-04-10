@@ -4,366 +4,367 @@
   <meta charset="UTF-8" />
   <title>Slipbox</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,wght@0,300;0,700;1,300&display=swap" rel="stylesheet"/>
 
   <style>
-    :root {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
-                   "Segoe UI", sans-serif;
-      color-scheme: dark;
-    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    * { box-sizing: border-box; }
+    :root {
+      --bg: #0e0e10;
+      --surface: #17171a;
+      --surface2: #1f1f24;
+      --border: #2e2e36;
+      --accent: #d4f264;
+      --accent2: #6af2b0;
+      --text: #e8e8ec;
+      --muted: #6b6b7a;
+      --red: #ff5c5c;
+    }
 
     body {
-      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
       min-height: 100vh;
-      background:
-        radial-gradient(circle at top, rgba(76, 99, 122, 0.18), transparent 35%),
-        linear-gradient(180deg, #0f141a 0%, #111821 100%);
-      color: #dbe3ea;
-      display: flex;
-      justify-content: center;
-      padding: 24px;
-    }
-
-    .app {
-      max-width: 1100px;
-      width: 100%;
-      background: rgba(18, 24, 32, 0.96);
-      border-radius: 18px;
-      padding: 20px 22px 24px;
-      box-shadow:
-        0 18px 45px rgba(0, 0, 0, 0.42),
-        0 0 0 1px rgba(112, 130, 148, 0.22);
       display: flex;
       flex-direction: column;
-      gap: 18px;
     }
 
-    header {
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(212,242,100,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(212,242,100,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .topbar {
+      position: relative;
+      z-index: 10;
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      padding-bottom: 8px;
-      border-bottom: 1px solid rgba(103, 120, 136, 0.28);
-      gap: 12px;
-    }
-
-    .title {
-      font-size: 1.4rem;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      font-weight: 600;
-      color: #eef4f8;
-    }
-
-    .subtitle {
-      font-size: 0.8rem;
-      color: #8f9eab;
-    }
-
-    main.layout {
-      display: flex;
-      flex-direction: column;
-      gap: 18px;
-    }
-
-    @media (min-width: 800px) {
-      main.layout {
-        flex-direction: row;
-        align-items: flex-start;
-      }
-    }
-
-    .panel {
-      background: rgba(24, 31, 40, 0.82);
-      border-radius: 14px;
-      padding: 16px 14px 14px;
-      border: 1px solid rgba(70, 84, 97, 0.8);
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .panel-left { flex: 1; min-width: 0; }
-    .panel-right { flex: 1.1; min-width: 0; }
-
-    .panel h2 {
-      font-size: 0.9rem;
-      text-transform: uppercase;
-      letter-spacing: 0.07em;
-      color: #8f9eab;
-      margin: 0;
-    }
-
-    label {
-      font-size: 0.85rem;
-      color: #c6d1da;
-    }
-
-    textarea,
-    .search-input,
-    .export-row input,
-    .export-row select,
-    #pastNoteTime {
-      width: 100%;
-      resize: vertical;
-      padding: 10px 11px;
-      border-radius: 10px;
-      border: 1px solid rgba(74, 89, 103, 0.9);
-      background: #0d1218;
-      color: #e5edf3;
-      font-family: inherit;
-      font-size: 0.9rem;
-      line-height: 1.4;
-      outline: none;
-    }
-
-    textarea:focus,
-    .search-input:focus,
-    .export-row input:focus,
-    .export-row select:focus,
-    #pastNoteTime:focus {
-      border-color: #6f8ea8;
-      box-shadow: 0 0 0 1px rgba(111, 142, 168, 0.5);
-    }
-
-    .controls {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-      margin-top: 4px;
+      gap: 16px;
+      padding: 18px 28px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
       flex-wrap: wrap;
     }
 
-    button {
-      border: none;
-      border-radius: 999px;
-      padding: 8px 18px;
-      font-size: 0.9rem;
-      font-weight: 500;
-      background: linear-gradient(135deg, #5f7488, #7c94aa);
-      color: white;
-      cursor: pointer;
-      transition: transform 0.06s ease, box-shadow 0.06s ease, opacity 0.08s;
-      box-shadow: 0 8px 18px rgba(70, 90, 109, 0.35);
+    .topbar h1 {
+      font-family: 'Fraunces', serif;
+      font-weight: 700;
+      font-size: 1.5rem;
+      color: var(--accent);
+      letter-spacing: -0.5px;
       white-space: nowrap;
     }
 
-    button:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 12px 28px rgba(70, 90, 109, 0.45);
+    .topbar-sub {
+      font-size: 0.68rem;
+      color: var(--muted);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-right: auto;
     }
 
-    button:active {
-      transform: translateY(0);
-      box-shadow: 0 5px 14px rgba(70, 90, 109, 0.32);
-      opacity: 0.95;
+    .layout {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+      height: calc(100vh - 65px);
     }
 
-    button.secondary {
-      background: #121920;
-      border: 1px solid rgba(74, 89, 103, 0.9);
-      box-shadow: none;
-      color: #d7e0e8;
+    .sidebar {
+      width: 320px;
+      flex-shrink: 0;
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
     }
 
-    button.secondary:hover {
-      transform: translateY(-1px);
-      box-shadow: none;
-      border-color: rgba(111, 142, 168, 0.8);
+    .sidebar-section {
+      border-bottom: 1px solid var(--border);
     }
 
-    button.secondary:active {
-      transform: translateY(0);
-      opacity: 0.95;
+    .sidebar-header {
+      padding: 14px 18px;
+      font-size: 0.65rem;
+      color: var(--muted);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
     }
 
-    button.danger {
-      background: #121920;
-      border: 1px solid rgba(186, 95, 95, 0.7);
-      box-shadow: none;
-      color: #f1c1c1;
+    .sidebar-header:hover { color: var(--text); }
+
+    .sidebar-header .toggle-arrow {
+      font-size: 0.6rem;
+      transition: transform 0.15s;
     }
 
-    button.danger:hover {
-      transform: translateY(-1px);
-      box-shadow: none;
-      border-color: rgba(186, 95, 95, 1);
+    .sidebar-header.collapsed .toggle-arrow {
+      transform: rotate(-90deg);
     }
 
-    button.danger:active {
-      transform: translateY(0);
-      opacity: 0.95;
+    .sidebar-body {
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
 
-    .hint {
-      font-size: 0.75rem;
-      color: #8f9eab;
+    .sidebar-body.hidden { display: none; }
+
+    .sidebar-body label {
+      font-size: 0.65rem;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 3px;
+      display: block;
+    }
+
+    .sidebar-body textarea,
+    .sidebar-body input[type="datetime-local"],
+    .sidebar-body input[type="date"],
+    .sidebar-body input[type="month"],
+    .sidebar-body input[type="file"],
+    .sidebar-body input[type="text"],
+    .sidebar-body select {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.78rem;
+      padding: 8px 12px;
+      border-radius: 6px;
+      outline: none;
+      transition: border-color 0.2s;
+      resize: vertical;
+    }
+
+    .sidebar-body textarea::placeholder,
+    .sidebar-body input::placeholder {
+      color: var(--muted);
+    }
+
+    .sidebar-body textarea:focus,
+    .sidebar-body input:focus,
+    .sidebar-body select:focus {
+      border-color: var(--accent2);
+    }
+
+    .sidebar-body textarea {
+      min-height: 80px;
+      line-height: 1.5;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #0e0e10;
+      border: none;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.78rem;
+      font-weight: 500;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: opacity 0.15s, transform 0.1s;
+      width: 100%;
+    }
+
+    .btn-primary:hover { opacity: 0.85; }
+    .btn-primary:active { transform: scale(0.97); }
+
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.78rem;
+      padding: 7px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      width: 100%;
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--accent2);
+      background: rgba(106,242,176,0.05);
+    }
+
+    .btn-accent2 {
+      background: transparent;
+      border: 1px solid var(--accent2);
+      color: var(--accent2);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.78rem;
+      padding: 7px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+      width: 100%;
+    }
+
+    .btn-accent2:hover { background: var(--accent2); color: #0e0e10; }
+
+    .hint-text {
+      font-size: 0.68rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .hint-text.accent { color: var(--accent2); }
+
+    .export-group {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .input-btn-row {
+      display: flex;
+      gap: 8px;
+      align-items: stretch;
+    }
+
+    .input-btn-row input,
+    .input-btn-row select {
+      flex: 1;
+      min-width: 0;
+      width: auto !important;
+    }
+
+    .input-btn-row .btn-secondary {
+      width: auto;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .shortcuts-hint {
+      font-size: 0.65rem;
+      color: var(--muted);
     }
 
     .kbd {
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-        "Liberation Mono", "Courier New", monospace;
-      font-size: 0.75rem;
-      background: rgba(22, 29, 37, 0.95);
-      padding: 2px 7px;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65rem;
+      background: var(--surface2);
+      padding: 2px 6px;
       border-radius: 4px;
-      border: 1px solid rgba(80, 95, 108, 0.75);
-      color: #d9e2e9;
+      border: 1px solid var(--border);
+      color: var(--text);
     }
 
-    .search-row {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .search-input {
-      border-radius: 999px;
-      padding: 8px 10px;
-      font-size: 0.85rem;
-    }
-
-    .notes-list {
-      margin-top: 8px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      max-height: 460px;
-      overflow-y: auto;
-      padding-right: 2px;
-    }
-
-    .export-block {
-      margin-top: 6px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .export-row {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-
-    .export-row input,
-    .export-row select {
+    .main {
       flex: 1;
-      min-width: 180px;
-      padding: 8px 10px;
-      border-radius: 999px;
-      font-size: 0.85rem;
-      cursor: pointer;
-    }
-
-    .review-card {
-      background: rgba(17, 23, 30, 0.96);
-      border: 1px solid rgba(67, 81, 94, 0.85);
-      border-radius: 14px;
-      padding: 14px;
       display: flex;
       flex-direction: column;
+      overflow: hidden;
+    }
+
+    .search-bar {
+      padding: 14px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
       gap: 12px;
     }
 
-    .review-top-row,
-    .review-meta-row,
-    .review-actions {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      flex-wrap: wrap;
+    .search-bar span {
+      font-size: 0.65rem;
+      color: var(--muted);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      white-space: nowrap;
     }
 
-    .review-badge,
-    .score-badge {
-      display: inline-flex;
+    .search-bar input {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.8rem;
+      padding: 7px 12px;
+      border-radius: 20px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .search-bar input::placeholder { color: var(--muted); }
+    .search-bar input:focus { border-color: var(--accent); }
+
+    .note-count-badge {
+      background: var(--surface2);
+      color: var(--muted);
+      font-size: 0.65rem;
+      padding: 3px 10px;
+      border-radius: 99px;
+      border: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    .notes-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .notes-list::-webkit-scrollbar { width: 4px; }
+    .notes-list::-webkit-scrollbar-track { background: transparent; }
+    .notes-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    .empty-state {
+      display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      min-width: 36px;
-      padding: 4px 10px;
-      border-radius: 999px;
-      font-size: 0.75rem;
-      border: 1px solid rgba(84, 101, 116, 0.9);
-      color: #dbe3ea;
-      background: rgba(25, 33, 42, 0.95);
+      gap: 10px;
+      padding: 60px 24px;
+      text-align: center;
     }
 
-    .score-badge {
-      min-width: 48px;
-      font-weight: 600;
-    }
-
-    .review-note-text {
-      margin: 0;
-      font-size: 0.98rem;
-      line-height: 1.5;
-      white-space: pre-wrap;
-      word-wrap: break-word;
-      color: #eef4f8;
-    }
-
-    .score-grid {
-      display: grid;
-      grid-template-columns: repeat(5, minmax(0, 1fr));
-      gap: 8px;
-    }
-
-    @media (max-width: 520px) {
-      .score-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-    }
-
-    .score-btn {
-      border-radius: 12px;
-      padding: 10px 0;
-      background: #121920;
-      border: 1px solid rgba(74, 89, 103, 0.9);
-      box-shadow: none;
-      color: #e5edf3;
-      font-weight: 600;
-    }
-
-    .score-btn:hover {
-      transform: translateY(-1px);
-      box-shadow: none;
-      border-color: rgba(111, 142, 168, 0.8);
-    }
-
-    .review-empty {
-      padding: 16px 14px;
-      border-radius: 12px;
-      border: 1px dashed rgba(74, 89, 103, 0.8);
-      background: rgba(17, 23, 30, 0.6);
-      color: #9fb0bd;
-      font-size: 0.88rem;
-    }
+    .empty-state p { font-size: 0.78rem; color: var(--muted); line-height: 1.6; }
 
     details.month-block {
-      border-radius: 10px;
-      border: 1px solid rgba(53, 65, 76, 0.85);
-      background: rgba(19, 25, 33, 0.9);
-      padding: 4px 8px 6px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      overflow: hidden;
     }
 
-    details.month-block + details.month-block { margin-top: 6px; }
+    details.month-block + details.month-block { margin-top: 4px; }
 
     summary.month-summary {
       cursor: pointer;
       list-style: none;
       display: flex;
       justify-content: space-between;
-      align-items: baseline;
-      font-size: 0.85rem;
+      align-items: center;
+      padding: 10px 14px;
+      font-size: 0.65rem;
       text-transform: uppercase;
-      letter-spacing: 0.06em;
-      color: #95a4b1;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      user-select: none;
     }
 
     summary.month-summary::-webkit-details-marker { display: none; }
@@ -373,7 +374,7 @@
       display: inline-block;
       margin-right: 6px;
       transition: transform 0.12s ease;
-      font-size: 0.7rem;
+      font-size: 0.6rem;
     }
 
     details[open] > summary .month-summary-title::before {
@@ -381,23 +382,24 @@
     }
 
     .month-summary-count {
-      font-size: 0.75rem;
-      color: #72808c;
+      background: var(--surface2);
+      padding: 2px 8px;
+      border-radius: 99px;
+      font-size: 0.62rem;
+      border: 1px solid var(--border);
     }
 
     .month-inner {
-      margin-top: 4px;
-      padding-left: 4px;
-      border-left: 1px solid rgba(57, 69, 80, 0.7);
+      padding: 0 10px 10px;
       display: flex;
       flex-direction: column;
       gap: 4px;
+      border-top: 1px solid var(--border);
     }
 
     details.day-block {
       border-radius: 6px;
-      padding: 2px 4px 4px;
-      background: transparent;
+      padding: 2px 0 4px;
     }
 
     summary.day-summary {
@@ -405,9 +407,11 @@
       list-style: none;
       display: flex;
       justify-content: space-between;
-      align-items: baseline;
-      font-size: 0.8rem;
-      color: #d0dbe4;
+      align-items: center;
+      padding: 8px 4px;
+      font-size: 0.72rem;
+      color: var(--text);
+      user-select: none;
     }
 
     summary.day-summary::-webkit-details-marker { display: none; }
@@ -417,7 +421,8 @@
       display: inline-block;
       margin-right: 6px;
       transition: transform 0.12s ease;
-      font-size: 0.7rem;
+      font-size: 0.6rem;
+      color: var(--muted);
     }
 
     details.day-block[open] > summary .day-summary-title::before {
@@ -425,185 +430,211 @@
     }
 
     .day-summary-count {
-      font-size: 0.75rem;
-      color: #8f9eab;
+      font-size: 0.65rem;
+      color: var(--muted);
     }
 
     .day-inner {
-      margin-top: 2px;
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 5px;
+      padding-left: 12px;
+      border-left: 1px solid var(--border);
+      margin-left: 4px;
     }
 
     .note {
-      padding: 8px 10px;
-      border-radius: 10px;
-      background: rgba(17, 23, 30, 0.94);
-      border: 1px solid rgba(67, 81, 94, 0.85);
+      padding: 10px 12px;
+      border-radius: 7px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
       display: flex;
       flex-direction: column;
       gap: 6px;
+      transition: border-color 0.15s;
     }
+
+    .note:hover { border-color: rgba(106,242,176,0.3); }
 
     .note-header-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
       gap: 8px;
-      flex-wrap: wrap;
     }
 
     .note-meta-wrap {
       display: flex;
       align-items: center;
       gap: 8px;
-      flex-wrap: wrap;
     }
 
     .note-meta {
-      font-size: 0.75rem;
-      color: #8f9eab;
+      font-size: 0.65rem;
+      color: var(--muted);
+    }
+
+    .score-badge {
+      font-size: 0.62rem;
+      padding: 2px 8px;
+      border-radius: 99px;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      background: var(--surface);
+    }
+
+    .score-badge.rated {
+      border-color: rgba(106,242,176,0.4);
+      color: var(--accent2);
     }
 
     .delete-note-btn {
-      padding: 4px 10px;
-      font-size: 0.75rem;
-      border-radius: 999px;
-      white-space: nowrap;
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 1rem;
+      line-height: 1;
+      padding: 0 2px;
+      transition: color 0.15s;
+      font-family: 'DM Mono', monospace;
     }
+
+    .delete-note-btn:hover { color: var(--red); }
 
     .note-text {
       margin: 0;
-      font-size: 0.9rem;
+      font-size: 0.82rem;
       white-space: pre-wrap;
       word-wrap: break-word;
-      color: #e6edf3;
+      color: var(--text);
+      line-height: 1.55;
     }
 
-    .empty {
-      font-size: 0.8rem;
-      color: #72808c;
-      padding: 12px 4px;
+    .error-toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--red);
+      color: #fff;
+      font-size: 0.78rem;
+      padding: 10px 20px;
+      border-radius: 6px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s, transform 0.2s;
+      z-index: 999;
+      font-family: 'DM Mono', monospace;
+    }
+
+    .error-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    @media (max-width: 700px) {
+      .layout { flex-direction: column; height: auto; }
+      .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border); }
     }
   </style>
 </head>
 
 <body>
-  <div class="app">
-    <header>
-      <div>
-        <div class="title">Slipbox</div>
-        <div class="subtitle">A minimal inbox for your notes</div>
-      </div>
-      <div class="subtitle">Stored locally · No account · No sync (yet)</div>
-    </header>
+  <div class="topbar">
+    <h1>Slipbox</h1>
+    <span class="topbar-sub">a minimal inbox for your notes</span>
+    <span class="hint-text">stored locally · no account</span>
+  </div>
 
-    <main class="layout">
-      <section class="panel panel-left">
-        <h2>Rank random notes</h2>
+  <div class="layout">
 
-        <div id="reviewBox" class="review-card"></div>
+    <div class="sidebar">
 
-        <hr style="margin: 4px 0 8px; border: none; border-top: 1px solid rgba(74, 89, 103, 0.7);" />
-
-        <h2>New note</h2>
-
-        <label for="noteInput">Note</label>
-        <textarea id="noteInput" placeholder="Type anything you’d normally email yourself..."></textarea>
-
-        <div class="controls">
-          <button id="saveButton">Save note</button>
-          <div class="hint">
-            Shortcut:
-            <span class="kbd">Ctrl</span> + <span class="kbd">Enter</span>
-            /
+      <div class="sidebar-section">
+        <div class="sidebar-header" id="newNoteHeader">
+          <span>New note</span>
+          <span class="toggle-arrow">▾</span>
+        </div>
+        <div class="sidebar-body" id="newNoteBody">
+          <div>
+            <label for="noteInput">Note</label>
+            <textarea id="noteInput" placeholder="Type anything you'd normally email yourself…"></textarea>
+          </div>
+          <button class="btn-primary" id="saveButton">Save note</button>
+          <div class="shortcuts-hint">
+            <span class="kbd">Ctrl</span> + <span class="kbd">Enter</span> &nbsp;/&nbsp;
             <span class="kbd">⌘</span> + <span class="kbd">Enter</span>
           </div>
         </div>
+      </div>
 
-        <hr style="margin: 14px 0; border: none; border-top: 1px solid rgba(74, 89, 103, 0.7);" />
-
-        <h2 style="font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.07em; color: #8f9eab; margin: 0 0 4px;">
-          Add past note
-        </h2>
-
-        <label for="pastNoteInput">Note</label>
-        <textarea id="pastNoteInput" placeholder="Paste an old note here..."></textarea>
-
-        <label for="pastNoteTime" style="margin-top: 6px;">Timestamp (past)</label>
-        <input id="pastNoteTime" type="datetime-local" />
-
-        <div class="controls" style="margin-top: 6px;">
-          <button id="savePastButton">Save past note</button>
+      <div class="sidebar-section">
+        <div class="sidebar-header collapsed" id="pastNoteHeader">
+          <span>Add past note</span>
+          <span class="toggle-arrow">▾</span>
         </div>
-      </section>
-
-      <section class="panel panel-right">
-        <h2>Notes</h2>
-
-        <div class="search-row">
-          <label for="searchInput">Search</label>
-          <input
-            id="searchInput"
-            class="search-input"
-            type="text"
-            placeholder="Search notes..."
-          />
+        <div class="sidebar-body hidden" id="pastNoteBody">
+          <div>
+            <label for="pastNoteInput">Note</label>
+            <textarea id="pastNoteInput" placeholder="Paste an old note here…"></textarea>
+          </div>
+          <div>
+            <label for="pastNoteTime">Timestamp</label>
+            <input id="pastNoteTime" type="datetime-local" />
+          </div>
+          <button class="btn-primary" id="savePastButton">Save past note</button>
         </div>
+      </div>
 
-        <div class="export-block" aria-label="Export notes">
-          <div class="export-row">
-            <button id="exportRankedPdfBtn">Export ranked PDF</button>
-            <button id="exportRankedTxtBtn" class="secondary">Export ranked .txt</button>
-          </div>
-
-          <div class="export-row">
-            <button id="exportAllBtn" class="secondary">Export all .txt</button>
-          </div>
-
-          <div class="export-row">
-            <input id="exportDayInput" type="date" />
-            <button id="exportDayBtn" class="secondary">Export day .txt</button>
-          </div>
-
-          <div class="export-row">
-            <input id="exportMonthOnlyInput" type="month" />
-            <button id="exportMonthBtn" class="secondary">Export month .txt</button>
-          </div>
-
-          <div class="export-row">
-            <input id="exportMonthInput" type="month" />
-            <select id="exportWeekSelect">
-              <option value="1">Week 1 (1–7)</option>
-              <option value="2">Week 2 (8–14)</option>
-              <option value="3">Week 3 (15–21)</option>
-              <option value="4">Week 4 (22–28)</option>
-              <option value="5">Week 5 (29–end)</option>
-            </select>
-            <button id="exportWeekBtn" class="secondary">Export week .txt</button>
-          </div>
-
-          <div class="export-row">
-            <input id="csvInput" type="file" accept=".csv,text/csv" />
-            <button id="importCsvBtn" class="secondary">Import CSV</button>
-          </div>
-
-          <div id="exportHint" class="hint"></div>
-          <div id="importHint" class="hint"></div>
+      <div class="sidebar-section">
+        <div class="sidebar-header collapsed" id="exportHeader">
+          <span>Export &amp; Import</span>
+          <span class="toggle-arrow">▾</span>
         </div>
+        <div class="sidebar-body hidden" id="exportBody">
+          <div class="export-group">
+            <button class="btn-accent2" id="exportRankedTxtBtn">Export ranked .txt</button>
+            <button class="btn-secondary" id="exportAllBtn">Export all .txt</button>
+          </div>
 
-        <div id="notesList" class="notes-list"></div>
-      </section>
-    </main>
+          <div>
+            <label>Export by month</label>
+            <div class="input-btn-row">
+              <input id="exportMonthOnlyInput" type="month" />
+              <button class="btn-secondary" id="exportMonthBtn">Export</button>
+            </div>
+          </div>
+
+          <div>
+            <label>Import CSV</label>
+            <div style="display:flex;flex-direction:column;gap:7px;">
+              <input id="csvInput" type="file" accept=".csv,text/csv" />
+              <button class="btn-secondary" id="importCsvBtn">Import CSV</button>
+            </div>
+          </div>
+
+          <div id="exportHint" class="hint-text"></div>
+          <div id="importHint" class="hint-text accent"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="main">
+      <div class="search-bar">
+        <span>Notes</span>
+        <input id="searchInput" type="text" placeholder="Search…" />
+        <span class="note-count-badge" id="noteCountBadge">0 notes</span>
+      </div>
+      <div id="notesList" class="notes-list"></div>
+    </div>
+
   </div>
+
+  <div class="error-toast" id="errorToast"></div>
 
   <script>
     (function () {
       const STORAGE_KEY = "slipboxNotes";
-      const IMPORT_YEAR = 2025;
       let notes = [];
-      let currentReviewNoteId = null;
 
       const MONTH_NAMES = [
         "January","February","March","April","May","June",
@@ -612,11 +643,7 @@
 
       function loadNotes() {
         const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) {
-          notes = [];
-          return;
-        }
-
+        if (!raw) { notes = []; return; }
         try {
           const parsed = JSON.parse(raw);
           if (Array.isArray(parsed)) {
@@ -626,13 +653,8 @@
               createdAt: n.createdAt || new Date().toISOString(),
               relevanceScore: Number.isInteger(n.relevanceScore) ? n.relevanceScore : null
             }));
-          } else {
-            notes = [];
-          }
-        } catch (err) {
-          console.error("Failed to parse notes from localStorage", err);
-          notes = [];
-        }
+          } else { notes = []; }
+        } catch (err) { notes = []; }
       }
 
       function saveNotes() {
@@ -642,7 +664,6 @@
       function createNote(text, createdAtISO) {
         const baseText = (text || "").trim();
         if (!baseText) return;
-
         let createdDate;
         if (createdAtISO) {
           const parsed = new Date(createdAtISO);
@@ -650,15 +671,12 @@
         } else {
           createdDate = new Date();
         }
-
-        const note = {
+        notes.unshift({
           id: Date.now() + Math.random(),
           text: baseText,
           createdAt: createdDate.toISOString(),
           relevanceScore: null
-        };
-
-        notes.unshift(note);
+        });
         saveNotes();
       }
 
@@ -666,42 +684,18 @@
         const idx = notes.findIndex(n => String(n.id) === String(noteId));
         if (idx === -1) return;
         notes.splice(idx, 1);
-        if (String(currentReviewNoteId) === String(noteId)) currentReviewNoteId = null;
         saveNotes();
-      }
-
-      function setRelevance(noteId, score) {
-        const note = notes.find(n => String(n.id) === String(noteId));
-        if (!note) return false;
-        note.relevanceScore = score;
-        if (String(currentReviewNoteId) === String(noteId)) currentReviewNoteId = null;
-        saveNotes();
-        return true;
-      }
-
-      function getUnratedNotes() {
-        return notes.filter(note => !Number.isInteger(note.relevanceScore));
       }
 
       function getRatedNotes() {
         return notes.filter(note => Number.isInteger(note.relevanceScore));
       }
 
-      function pickRandomUnratedNote() {
-        const unrated = getUnratedNotes();
-        if (!unrated.length) return null;
-        const randomIndex = Math.floor(Math.random() * unrated.length);
-        return unrated[randomIndex];
-      }
-
-      function getCurrentReviewNote() {
-        if (currentReviewNoteId !== null) {
-          const existing = notes.find(n => String(n.id) === String(currentReviewNoteId) && !Number.isInteger(n.relevanceScore));
-          if (existing) return existing;
-        }
-        const next = pickRandomUnratedNote();
-        currentReviewNoteId = next ? next.id : null;
-        return next;
+      function getRatedNotesSorted() {
+        return getRatedNotes().slice().sort((a, b) => {
+          if (b.relevanceScore !== a.relevanceScore) return b.relevanceScore - a.relevanceScore;
+          return new Date(b.createdAt) - new Date(a.createdAt);
+        });
       }
 
       function formatTime(isoString) {
@@ -713,80 +707,55 @@
       function formatDateTime(isoString) {
         const d = new Date(isoString);
         if (isNaN(d.getTime())) return "";
-        return d.toLocaleString(undefined, {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-          hour: "2-digit",
-          minute: "2-digit"
-        });
+        return d.toLocaleString(undefined, { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
       }
 
       function formatGeneratedStamp() {
         const d = new Date();
-        const date = d.toLocaleDateString(undefined, { year: "numeric", month: "2-digit", day: "2-digit" });
-        const time = d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
-        return `${date} ${time}`;
+        return d.toLocaleDateString(undefined, { year: "numeric", month: "2-digit", day: "2-digit" }) + " " +
+               d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
       }
 
       function safeFileStamp() {
         const d = new Date();
-        const y = d.getFullYear();
-        const m = String(d.getMonth() + 1).padStart(2, "0");
-        const day = String(d.getDate()).padStart(2, "0");
-        return `${y}-${m}-${day}`;
+        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
       }
 
       function downloadTextFile(filename, text) {
         const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
+        a.href = url; a.download = filename;
+        document.body.appendChild(a); a.click(); a.remove();
         URL.revokeObjectURL(url);
       }
 
       function escapeHtml(value) {
         return String(value || "")
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;")
-          .replace(/"/g, "&quot;")
-          .replace(/'/g, "&#39;");
+          .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+          .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
       }
 
       function getMonthKey(d) {
         if (!(d instanceof Date) || isNaN(d.getTime())) return "unknown";
-        const y = d.getFullYear();
-        const m = String(d.getMonth() + 1).padStart(2, "0");
-        return `${y}-${m}`;
+        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
       }
 
       function getDayKey(d) {
         if (!(d instanceof Date) || isNaN(d.getTime())) return "unknown";
-        const y = d.getFullYear();
-        const m = String(d.getMonth() + 1).padStart(2, "0");
-        const day = String(d.getDate()).padStart(2, "0");
-        return `${y}-${m}-${day}`;
+        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
       }
 
       function getMonthLabelFromKey(key) {
         if (key === "unknown") return "Unknown";
         const [y, m] = key.split("-");
-        const idx = parseInt(m, 10) - 1;
-        const name = MONTH_NAMES[idx] || "Unknown";
-        return `${name} ${y}`;
+        return `${MONTH_NAMES[parseInt(m,10)-1] || "Unknown"} ${y}`;
       }
 
       function getDayLabelFromKey(key) {
         if (key === "unknown") return "Unknown day";
         const [y, m, d] = key.split("-");
-        const idx = parseInt(m, 10) - 1;
-        const monthName = MONTH_NAMES[idx] || "Unknown";
-        return `${monthName} ${parseInt(d, 10)}`;
+        return `${MONTH_NAMES[parseInt(m,10)-1] || "Unknown"} ${parseInt(d,10)}`;
       }
 
       function buildStructureFromNotes(noteArray) {
@@ -795,7 +764,6 @@
           const d = new Date(note.createdAt);
           const monthKey = getMonthKey(d);
           const dayKey = getDayKey(d);
-
           if (!structure[monthKey]) structure[monthKey] = {};
           if (!structure[monthKey][dayKey]) structure[monthKey][dayKey] = [];
           structure[monthKey][dayKey].push(note);
@@ -804,34 +772,13 @@
       }
 
       function localYMDFromDate(d) {
-        return { y: d.getFullYear(), m: d.getMonth() + 1, d: d.getDate() };
-      }
-
-      function parseYMDString(yyyy_mm_dd) {
-        const [y, m, d] = (yyyy_mm_dd || "").split("-").map(n => parseInt(n, 10));
-        if (!y || !m || !d) return null;
-        return { y, m, d };
+        return { y: d.getFullYear(), m: d.getMonth()+1, d: d.getDate() };
       }
 
       function parseYMString(yyyy_mm) {
         const [y, m] = (yyyy_mm || "").split("-").map(n => parseInt(n, 10));
         if (!y || !m) return null;
         return { y, m };
-      }
-
-      function daysInMonth(year, month1to12) {
-        return new Date(year, month1to12, 0).getDate();
-      }
-
-      function getNotesForDay(dateStr) {
-        const target = parseYMDString(dateStr);
-        if (!target) return [];
-        return notes.filter(n => {
-          const nd = new Date(n.createdAt);
-          if (isNaN(nd.getTime())) return false;
-          const c = localYMDFromDate(nd);
-          return c.y === target.y && c.m === target.m && c.d === target.d;
-        });
       }
 
       function getNotesForMonth(ymStr) {
@@ -845,88 +792,48 @@
         });
       }
 
-      function getWeekRange(year, month1to12, weekNumber) {
-        const last = daysInMonth(year, month1to12);
-        const w = Math.min(Math.max(parseInt(weekNumber, 10) || 1, 1), 5);
-        const start = (w - 1) * 7 + 1;
-        const end = (w === 5) ? last : Math.min(w * 7, last);
-        return { startDay: start, endDay: end, lastDay: last };
-      }
-
-      function getNotesForWeekOfMonth(ymStr, weekNumber) {
-        const target = parseYMString(ymStr);
-        if (!target) return { list: [], range: null, target: null };
-        const range = getWeekRange(target.y, target.m, weekNumber);
-
-        const list = notes.filter(n => {
-          const nd = new Date(n.createdAt);
-          if (isNaN(nd.getTime())) return false;
-          const c = localYMDFromDate(nd);
-          return c.y === target.y && c.m === target.m && c.d >= range.startDay && c.d <= range.endDay;
-        });
-
-        return { list, range, target };
-      }
-
       function buildTxtFromNotes(noteList, { title }) {
         if (!noteList.length) return "";
-
         const structure = buildStructureFromNotes(noteList);
         const lines = [];
         lines.push(`SLIPBOX EXPORT — ${title}`);
         lines.push(`Generated: ${formatGeneratedStamp()}`);
         lines.push("");
-
-        const monthKeys = Object.keys(structure).sort((a, b) => b.localeCompare(a));
+        const monthKeys = Object.keys(structure).sort((a,b) => b.localeCompare(a));
         monthKeys.forEach((monthKey, mi) => {
           lines.push(getMonthLabelFromKey(monthKey).toUpperCase());
-
-          const dayKeys = Object.keys(structure[monthKey]).sort((a, b) => b.localeCompare(a));
+          const dayKeys = Object.keys(structure[monthKey]).sort((a,b) => b.localeCompare(a));
           dayKeys.forEach(dayKey => {
             lines.push(`— ${getDayLabelFromKey(dayKey)} —`);
-
-            const dayNotes = structure[monthKey][dayKey].slice().sort((a, b) => {
-              return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-            });
-
+            const dayNotes = structure[monthKey][dayKey].slice().sort((a,b) => new Date(b.createdAt)-new Date(a.createdAt));
             dayNotes.forEach(note => {
-              const time = formatTime(note.createdAt);
-              lines.push(`[${time}] ${note.text}`);
+              lines.push(`[${formatTime(note.createdAt)}] ${note.text}`);
               lines.push("");
             });
           });
-
-          if (mi !== monthKeys.length - 1) lines.push("");
+          if (mi !== monthKeys.length-1) lines.push("");
         });
-
         return lines.join("\n").replace(/\n{3,}/g, "\n\n");
       }
 
       function buildRankedTxt(noteList) {
         if (!noteList.length) return "";
-
         const lines = [];
         lines.push("SLIPBOX RANKED EXPORT");
         lines.push(`Generated: ${formatGeneratedStamp()}`);
         lines.push("");
-
         for (let score = 10; score >= 1; score--) {
           const sectionNotes = noteList.filter(note => note.relevanceScore === score);
           if (!sectionNotes.length) continue;
-
           lines.push(`RELEVANCE ${score}`);
           lines.push("");
-
-          sectionNotes
-            .slice()
-            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+          sectionNotes.slice().sort((a,b) => new Date(b.createdAt)-new Date(a.createdAt))
             .forEach((note, index) => {
-              lines.push(`${index + 1}. ${note.text}`);
+              lines.push(`${index+1}. ${note.text}`);
               lines.push(`   ${formatDateTime(note.createdAt)}`);
               lines.push("");
             });
         }
-
         return lines.join("\n").replace(/\n{3,}/g, "\n\n").trim() + "\n";
       }
 
@@ -945,566 +852,207 @@
         return { ok: true };
       }
 
-      function getRatedNotesSorted() {
-        return getRatedNotes().slice().sort((a, b) => {
-          if (b.relevanceScore !== a.relevanceScore) return b.relevanceScore - a.relevanceScore;
-          return new Date(b.createdAt) - new Date(a.createdAt);
-        });
-      }
-
-      function exportRankedPdf() {
-        const rated = getRatedNotesSorted();
-        if (!rated.length) return { ok: false, msg: "No ranked notes yet." };
-
-        const sections = [];
-        for (let score = 10; score >= 1; score--) {
-          const sectionNotes = rated.filter(note => note.relevanceScore === score);
-          if (!sectionNotes.length) continue;
-
-          const items = sectionNotes.map((note, index) => `
-            <article class="item">
-              <div class="item-top">
-                <span class="score">Score ${score}</span>
-                <span class="date">${escapeHtml(formatDateTime(note.createdAt))}</span>
-              </div>
-              <div class="index">#${index + 1}</div>
-              <p>${escapeHtml(note.text).replace(/\n/g, "<br>")}</p>
-            </article>
-          `).join("");
-
-          sections.push(`
-            <section class="section">
-              <h2>Relevance ${score}</h2>
-              ${items}
-            </section>
-          `);
-        }
-
-        const html = `
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <meta charset="UTF-8">
-            <title>Slipbox Ranked Export</title>
-            <style>
-              body {
-                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-                margin: 32px;
-                color: #111827;
-              }
-              h1 {
-                margin: 0 0 6px;
-                font-size: 28px;
-              }
-              .meta {
-                color: #4b5563;
-                margin-bottom: 24px;
-                font-size: 14px;
-              }
-              .section {
-                margin-bottom: 28px;
-                page-break-inside: avoid;
-              }
-              .section h2 {
-                margin: 0 0 12px;
-                padding-bottom: 6px;
-                border-bottom: 1px solid #d1d5db;
-                font-size: 18px;
-              }
-              .item {
-                border: 1px solid #d1d5db;
-                border-radius: 10px;
-                padding: 12px;
-                margin-bottom: 10px;
-                page-break-inside: avoid;
-              }
-              .item-top {
-                display: flex;
-                justify-content: space-between;
-                gap: 12px;
-                margin-bottom: 8px;
-                font-size: 12px;
-                color: #4b5563;
-              }
-              .score {
-                font-weight: 700;
-                color: #111827;
-              }
-              .index {
-                font-size: 12px;
-                color: #6b7280;
-                margin-bottom: 6px;
-              }
-              p {
-                margin: 0;
-                line-height: 1.55;
-                white-space: normal;
-                word-break: break-word;
-              }
-              @media print {
-                body { margin: 18mm; }
-              }
-            </style>
-          </head>
-          <body>
-            <h1>Slipbox Ranked Notes</h1>
-            <div class="meta">Generated ${escapeHtml(formatGeneratedStamp())} · ${rated.length} ranked note${rated.length !== 1 ? "s" : ""}</div>
-            ${sections.join("")}
-            <script>
-              window.onload = () => window.print();
-            <\/script>
-          </body>
-          </html>
-        `;
-
-        const blob = new Blob([html], { type: "text/html;charset=utf-8" });
-        const url = URL.createObjectURL(blob);
-        const win = window.open(url, "_blank");
-        if (!win) {
-          URL.revokeObjectURL(url);
-          return { ok: false, msg: "Pop-up blocked. Allow pop-ups, then try again." };
-        }
-
-        setTimeout(() => URL.revokeObjectURL(url), 60000);
-        return { ok: true };
-      }
-
-      function exportDayTxt(dateStr) {
-        const list = getNotesForDay(dateStr).slice().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        if (!list.length) return { ok: false, msg: "No notes found for that day." };
-        const txt = buildTxtFromNotes(list, { title: `DAY: ${dateStr}` });
-        downloadTextFile(`slipbox_day_${dateStr}_export_${safeFileStamp()}.txt`, txt);
-        return { ok: true };
-      }
-
       function exportMonthTxt(ymStr) {
-        const list = getNotesForMonth(ymStr).slice().sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+        const list = getNotesForMonth(ymStr).slice().sort((a,b) => new Date(a.createdAt)-new Date(b.createdAt));
         if (!list.length) return { ok: false, msg: "No notes found for that month." };
-
         const target = parseYMString(ymStr);
-        const monthName = MONTH_NAMES[(target?.m || 1) - 1] || "Unknown";
-        const title = `MONTH: ${monthName} ${target?.y || ""}`.trim();
-
+        const monthName = MONTH_NAMES[(target?.m||1)-1] || "Unknown";
+        const title = `MONTH: ${monthName} ${target?.y||""}`.trim();
         const lines = [];
         lines.push(`SLIPBOX EXPORT — ${title}`);
         lines.push(`Generated: ${formatGeneratedStamp()}`);
         lines.push("");
-
         const byDay = {};
         list.forEach(n => {
-          const d = new Date(n.createdAt);
-          const key = getDayKey(d);
+          const key = getDayKey(new Date(n.createdAt));
           if (!byDay[key]) byDay[key] = [];
           byDay[key].push(n);
         });
-
-        const dayKeys = Object.keys(byDay).sort((a, b) => a.localeCompare(b));
-        dayKeys.forEach(dayKey => {
+        Object.keys(byDay).sort((a,b) => a.localeCompare(b)).forEach(dayKey => {
           lines.push(`— ${getDayLabelFromKey(dayKey)} —`);
-          const dayNotes = byDay[dayKey].slice().sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
-          dayNotes.forEach(note => {
-            const time = formatTime(note.createdAt);
-            lines.push(`[${time}] ${note.text}`);
+          byDay[dayKey].slice().sort((a,b) => new Date(a.createdAt)-new Date(b.createdAt)).forEach(note => {
+            lines.push(`[${formatTime(note.createdAt)}] ${note.text}`);
             lines.push("");
           });
           lines.push("");
         });
-
         const txt = lines.join("\n").replace(/\n{3,}/g, "\n\n").trim() + "\n";
         downloadTextFile(`slipbox_month_${ymStr}_export_${safeFileStamp()}.txt`, txt);
         return { ok: true };
       }
 
-      function exportWeekTxt(ymStr, weekNumber) {
-        const { list, range, target } = getNotesForWeekOfMonth(ymStr, weekNumber);
-        if (!target) return { ok: false, msg: "Invalid month. Use the month picker or enter YYYY-MM." };
-
-        const sorted = list.slice().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        if (!sorted.length) return { ok: false, msg: "No notes found for that week." };
-
-        const monthName = MONTH_NAMES[target.m - 1] || "Unknown";
-        const title = `WEEK: ${monthName} ${target.y} — Week ${weekNumber} (${range.startDay}–${range.endDay})`;
-        const txt = buildTxtFromNotes(sorted, { title });
-
-        downloadTextFile(`slipbox_week_${ymStr}_w${weekNumber}_export_${safeFileStamp()}.txt`, txt);
-        return { ok: true };
-      }
-
       function parseCSV(text) {
         const rows = [];
-        let row = [];
-        let cell = "";
-        let inQuotes = false;
-
+        let row = [], cell = "", inQuotes = false;
         for (let i = 0; i < text.length; i++) {
-          const ch = text[i];
-          const next = text[i + 1];
-
-          if (ch === '"' && inQuotes && next === '"') {
-            cell += '"';
-            i++;
-            continue;
+          const ch = text[i], next = text[i+1];
+          if (ch==='"' && inQuotes && next==='"') { cell+='"'; i++; continue; }
+          if (ch==='"') { inQuotes=!inQuotes; continue; }
+          if (ch==="," && !inQuotes) { row.push(cell); cell=""; continue; }
+          if ((ch==="\n"||ch==="\r") && !inQuotes) {
+            if (ch==="\r"&&next==="\n") i++;
+            row.push(cell); rows.push(row); row=[]; cell=""; continue;
           }
-
-          if (ch === '"') {
-            inQuotes = !inQuotes;
-            continue;
-          }
-
-          if (ch === "," && !inQuotes) {
-            row.push(cell);
-            cell = "";
-            continue;
-          }
-
-          if ((ch === "\n" || ch === "\r") && !inQuotes) {
-            if (ch === "\r" && next === "\n") i++;
-            row.push(cell);
-            rows.push(row);
-            row = [];
-            cell = "";
-            continue;
-          }
-
-          cell += ch;
+          cell+=ch;
         }
-
-        if (cell.length > 0 || row.length > 0) {
-          row.push(cell);
-          rows.push(row);
-        }
-
-        if (rows.length && rows[0].length && typeof rows[0][0] === "string") {
-          rows[0][0] = rows[0][0].replace(/^\uFEFF/, "");
-        }
-
+        if (cell.length>0||row.length>0) { row.push(cell); rows.push(row); }
+        if (rows.length&&rows[0].length&&typeof rows[0][0]==="string") rows[0][0]=rows[0][0].replace(/^\uFEFF/,"");
         return rows;
       }
 
       function monthNameToIndex(shortName) {
-        const m = (shortName || "").trim().toLowerCase().slice(0, 3);
-        const map = { jan:0, feb:1, mar:2, apr:3, may:4, jun:5, jul:6, aug:7, sep:8, oct:9, nov:10, dec:11 };
-        return (m in map) ? map[m] : null;
+        const m=(shortName||"").trim().toLowerCase().slice(0,3);
+        const map={jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
+        return (m in map)?map[m]:null;
       }
 
       function parseCsvTimestampToISO(tsRaw) {
-        const s = String(tsRaw || "").trim();
+        const s=String(tsRaw||"").trim();
         if (!s) return null;
-
-        const m = s.match(/^(?:[A-Za-z]{3},\s*)?([A-Za-z]{3})\s+(\d{1,2}),\s+(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+        const m=s.match(/^(?:[A-Za-z]{3},\s*)?([A-Za-z]{3})\s+(\d{1,2}),\s+(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
         if (!m) return null;
-
-        const mon = monthNameToIndex(m[1]);
-        const day = parseInt(m[2], 10);
-        let hour = parseInt(m[3], 10);
-        const minute = parseInt(m[4], 10);
-        const ampm = String(m[5] || "").toUpperCase();
-
-        if (mon === null || !day || isNaN(hour) || isNaN(minute)) return null;
-
-        if (ampm === "PM" && hour < 12) hour += 12;
-        if (ampm === "AM" && hour === 12) hour = 0;
-
-        const d = new Date(IMPORT_YEAR, mon, day, hour, minute, 0);
+        const mon=monthNameToIndex(m[1]), day=parseInt(m[2],10);
+        let hour=parseInt(m[3],10);
+        const minute=parseInt(m[4],10), ampm=String(m[5]||"").toUpperCase();
+        if (mon===null||!day||isNaN(hour)||isNaN(minute)) return null;
+        if (ampm==="PM"&&hour<12) hour+=12;
+        if (ampm==="AM"&&hour===12) hour=0;
+        const d=new Date(2025,mon,day,hour,minute,0);
         if (isNaN(d.getTime())) return null;
         return d.toISOString();
       }
 
       async function importCsvFile(file) {
         const text = await file.text();
-        const rows = parseCSV(text).filter(r => r.some(cell => String(cell || "").trim() !== ""));
-
-        if (!rows.length) {
-          return { ok: false, msg: "CSV looks empty." };
-        }
-
-        let imported = 0;
-        let skipped = 0;
-
-        const existing = new Set(notes.map(n => `${n.createdAt}::${n.text}`));
-
-        const firstRowLower = rows[0].map(c => String(c || "").trim().toLowerCase());
-        const looksLikeHeader = firstRowLower.some(h =>
-          ["timestamp","time","date"].includes(h) || ["note","text","content"].includes(h)
-        );
-
-        let startIndex = 0;
-        let tsIdx = 0;
-        let noteIdx = 1;
-
+        const rows = parseCSV(text).filter(r => r.some(cell => String(cell||"").trim()!==""));
+        if (!rows.length) return { ok: false, msg: "CSV looks empty." };
+        let imported=0, skipped=0;
+        const existing=new Set(notes.map(n=>`${n.createdAt}::${n.text}`));
+        const firstRowLower=rows[0].map(c=>String(c||"").trim().toLowerCase());
+        const looksLikeHeader=firstRowLower.some(h=>["timestamp","time","date","note","text","content"].includes(h));
+        let startIndex=0, tsIdx=0, noteIdx=1;
         if (looksLikeHeader) {
-          startIndex = 1;
-          tsIdx =
-            firstRowLower.indexOf("timestamp") !== -1 ? firstRowLower.indexOf("timestamp")
-            : firstRowLower.indexOf("time") !== -1 ? firstRowLower.indexOf("time")
-            : firstRowLower.indexOf("date") !== -1 ? firstRowLower.indexOf("date")
-            : 0;
-
-          noteIdx =
-            firstRowLower.indexOf("note") !== -1 ? firstRowLower.indexOf("note")
-            : firstRowLower.indexOf("text") !== -1 ? firstRowLower.indexOf("text")
-            : firstRowLower.indexOf("content") !== -1 ? firstRowLower.indexOf("content")
-            : 1;
+          startIndex=1;
+          tsIdx=firstRowLower.indexOf("timestamp")!==-1?firstRowLower.indexOf("timestamp"):firstRowLower.indexOf("time")!==-1?firstRowLower.indexOf("time"):firstRowLower.indexOf("date")!==-1?firstRowLower.indexOf("date"):0;
+          noteIdx=firstRowLower.indexOf("note")!==-1?firstRowLower.indexOf("note"):firstRowLower.indexOf("text")!==-1?firstRowLower.indexOf("text"):firstRowLower.indexOf("content")!==-1?firstRowLower.indexOf("content"):1;
         }
-
-        for (let i = startIndex; i < rows.length; i++) {
-          const r = rows[i];
-          const tsRaw = r[tsIdx] ?? "";
-          const noteRaw = r[noteIdx] ?? "";
-
-          const textVal = String(noteRaw ?? "").trim();
-          const iso = parseCsvTimestampToISO(tsRaw);
-
-          if (!textVal || !iso) {
-            skipped++;
-            continue;
-          }
-
-          const key = `${iso}::${textVal}`;
-          if (existing.has(key)) {
-            skipped++;
-            continue;
-          }
-
-          notes.push({
-            id: Date.now() + Math.random(),
-            text: textVal,
-            createdAt: iso,
-            relevanceScore: null
-          });
-
+        for (let i=startIndex; i<rows.length; i++) {
+          const r=rows[i];
+          const textVal=String(r[noteIdx]??"").trim();
+          const iso=parseCsvTimestampToISO(r[tsIdx]??"");
+          if (!textVal||!iso) { skipped++; continue; }
+          const key=`${iso}::${textVal}`;
+          if (existing.has(key)) { skipped++; continue; }
+          notes.push({ id:Date.now()+Math.random(), text:textVal, createdAt:iso, relevanceScore:null });
           existing.add(key);
           imported++;
         }
-
-        notes.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        notes.sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
         saveNotes();
-
-        return { ok: true, imported, skipped };
+        return { ok:true, imported, skipped };
       }
 
-      function renderReviewBox() {
-        const reviewBox = document.getElementById("reviewBox");
-        const note = getCurrentReviewNote();
-
-        if (!note) {
-          reviewBox.innerHTML = `
-            <div class="review-empty">
-              Every note has been ranked. You can keep adding notes, delete notes from the list, or export your ranked PDF.
-            </div>
-          `;
-          return;
-        }
-
-        reviewBox.innerHTML = "";
-
-        const topRow = document.createElement("div");
-        topRow.className = "review-top-row";
-
-        const title = document.createElement("div");
-        title.className = "review-badge";
-        title.textContent = "Random note";
-
-        const meta = document.createElement("div");
-        meta.className = "hint";
-        meta.textContent = formatDateTime(note.createdAt);
-
-        topRow.appendChild(title);
-        topRow.appendChild(meta);
-
-        const p = document.createElement("p");
-        p.className = "review-note-text";
-        p.textContent = note.text;
-
-        const metaRow = document.createElement("div");
-        metaRow.className = "review-meta-row";
-
-        const leftHint = document.createElement("div");
-        leftHint.className = "hint";
-        leftHint.textContent = "Rank it once and it won't show up here again.";
-
-        const remaining = document.createElement("div");
-        remaining.className = "hint";
-        remaining.textContent = `${getUnratedNotes().length} unrated remaining`;
-
-        metaRow.appendChild(leftHint);
-        metaRow.appendChild(remaining);
-
-        const scoreGrid = document.createElement("div");
-        scoreGrid.className = "score-grid";
-
-        for (let score = 10; score >= 1; score--) {
-          const btn = document.createElement("button");
-          btn.type = "button";
-          btn.className = "score-btn";
-          btn.textContent = String(score);
-          btn.title = score === 10 ? "Very relevant" : score === 1 ? "Not relevant at all" : `Relevance ${score}`;
-          btn.addEventListener("click", () => {
-            setRelevance(note.id, score);
-            renderReviewBox();
-            renderNotes(document.getElementById("searchInput").value);
-            refreshCounts();
-          });
-          scoreGrid.appendChild(btn);
-        }
-
-        const actions = document.createElement("div");
-        actions.className = "review-actions";
-
-        const legend = document.createElement("div");
-        legend.className = "hint";
-        legend.textContent = "10 = very relevant · 1 = not relevant at all";
-
-        const rightActions = document.createElement("div");
-        rightActions.style.display = "flex";
-        rightActions.style.gap = "8px";
-        rightActions.style.flexWrap = "wrap";
-
-        const skipBtn = document.createElement("button");
-        skipBtn.type = "button";
-        skipBtn.className = "secondary";
-        skipBtn.textContent = "Skip";
-        skipBtn.addEventListener("click", () => {
-          currentReviewNoteId = null;
-          renderReviewBox();
-        });
-
-        const delBtn = document.createElement("button");
-        delBtn.type = "button";
-        delBtn.className = "danger";
-        delBtn.textContent = "Delete note";
-        delBtn.addEventListener("click", () => {
-          const ok = confirm("Delete this note? This can’t be undone.");
-          if (!ok) return;
-          deleteNote(note.id);
-          renderReviewBox();
-          renderNotes(document.getElementById("searchInput").value);
-          refreshCounts();
-        });
-
-        rightActions.appendChild(skipBtn);
-        rightActions.appendChild(delBtn);
-
-        actions.appendChild(legend);
-        actions.appendChild(rightActions);
-
-        reviewBox.appendChild(topRow);
-        reviewBox.appendChild(p);
-        reviewBox.appendChild(metaRow);
-        reviewBox.appendChild(scoreGrid);
-        reviewBox.appendChild(actions);
+      function showToast(msg) {
+        const t=document.getElementById("errorToast");
+        t.textContent=msg; t.classList.add("show");
+        setTimeout(()=>t.classList.remove("show"),2800);
       }
 
-      function renderNotes(filterValue = "") {
-        const listEl = document.getElementById("notesList");
-        const query = filterValue.toLowerCase().trim();
+      function setHint(id, msg) {
+        const el=document.getElementById(id);
+        if (el) el.textContent=msg||"";
+      }
 
-        const filtered = query
-          ? notes.filter(n => (n.text || "").toLowerCase().includes(query))
-          : notes;
+      function refreshCounts() {
+        const total=notes.length;
+        const rated=getRatedNotes().length;
+        const unrated=total-rated;
+        document.getElementById("noteCountBadge").textContent=`${total} note${total!==1?"s":""}`;
+        setHint("exportHint", total?`${total} total · ${rated} ranked · ${unrated} unrated`:"No notes yet");
+      }
 
-        listEl.innerHTML = "";
+      function renderNotes(filterValue="") {
+        const listEl=document.getElementById("notesList");
+        const query=filterValue.toLowerCase().trim();
+        const filtered=query?notes.filter(n=>(n.text||"").toLowerCase().includes(query)):notes;
+        listEl.innerHTML="";
 
         if (!filtered.length) {
-          const empty = document.createElement("p");
-          empty.className = "empty";
-          empty.textContent = query ? "No notes match your search." : "No notes yet. Type on the left and save your first one.";
+          const empty=document.createElement("div");
+          empty.className="empty-state";
+          empty.innerHTML=`<p>${query?"No notes match your search.":"No notes yet. Add your first one on the left."}</p>`;
           listEl.appendChild(empty);
           return;
         }
 
-        const structure = buildStructureFromNotes(filtered);
-        const monthKeys = Object.keys(structure).sort((a, b) => b.localeCompare(a));
+        const structure=buildStructureFromNotes(filtered);
+        const monthKeys=Object.keys(structure).sort((a,b)=>b.localeCompare(a));
 
-        monthKeys.forEach(monthKey => {
-          const monthDays = structure[monthKey];
+        monthKeys.forEach(monthKey=>{
+          const monthDays=structure[monthKey];
+          const monthDetails=document.createElement("details");
+          monthDetails.className="month-block";
+          monthDetails.open=true;
 
-          const monthDetails = document.createElement("details");
-          monthDetails.className = "month-block";
-          monthDetails.open = true;
-
-          const monthSummary = document.createElement("summary");
-          monthSummary.className = "month-summary";
-
-          const titleSpan = document.createElement("span");
-          titleSpan.className = "month-summary-title";
-          titleSpan.textContent = getMonthLabelFromKey(monthKey);
-
-          const countSpan = document.createElement("span");
-          countSpan.className = "month-summary-count";
-          const monthCount = Object.values(monthDays).reduce((acc, arr) => acc + arr.length, 0);
-          countSpan.textContent = `${monthCount} note${monthCount !== 1 ? "s" : ""}`;
-
-          monthSummary.appendChild(titleSpan);
-          monthSummary.appendChild(countSpan);
+          const monthSummary=document.createElement("summary");
+          monthSummary.className="month-summary";
+          const monthCount=Object.values(monthDays).reduce((acc,arr)=>acc+arr.length,0);
+          monthSummary.innerHTML=
+            `<span class="month-summary-title">${getMonthLabelFromKey(monthKey)}</span>`+
+            `<span class="month-summary-count">${monthCount} note${monthCount!==1?"s":""}</span>`;
           monthDetails.appendChild(monthSummary);
 
-          const monthInner = document.createElement("div");
-          monthInner.className = "month-inner";
+          const monthInner=document.createElement("div");
+          monthInner.className="month-inner";
 
-          const dayKeys = Object.keys(monthDays).sort((a, b) => b.localeCompare(a));
-          dayKeys.forEach(dayKey => {
-            const dayNotes = monthDays[dayKey];
+          Object.keys(monthDays).sort((a,b)=>b.localeCompare(a)).forEach(dayKey=>{
+            const dayNotes=monthDays[dayKey];
+            const dayDetails=document.createElement("details");
+            dayDetails.className="day-block";
+            dayDetails.open=true;
 
-            const dayDetails = document.createElement("details");
-            dayDetails.className = "day-block";
-            dayDetails.open = true;
-
-            const daySummary = document.createElement("summary");
-            daySummary.className = "day-summary";
-
-            const dayTitle = document.createElement("span");
-            dayTitle.className = "day-summary-title";
-            dayTitle.textContent = getDayLabelFromKey(dayKey);
-
-            const dayCount = document.createElement("span");
-            dayCount.className = "day-summary-count";
-            dayCount.textContent = `${dayNotes.length} note${dayNotes.length !== 1 ? "s" : ""}`;
-
-            daySummary.appendChild(dayTitle);
-            daySummary.appendChild(dayCount);
+            const daySummary=document.createElement("summary");
+            daySummary.className="day-summary";
+            daySummary.innerHTML=
+              `<span class="day-summary-title">${getDayLabelFromKey(dayKey)}</span>`+
+              `<span class="day-summary-count">${dayNotes.length} note${dayNotes.length!==1?"s":""}</span>`;
             dayDetails.appendChild(daySummary);
 
-            const dayInner = document.createElement("div");
-            dayInner.className = "day-inner";
+            const dayInner=document.createElement("div");
+            dayInner.className="day-inner";
 
-            const sortedDayNotes = dayNotes.slice().sort((a, b) => {
-              if ((b.relevanceScore || 0) !== (a.relevanceScore || 0)) {
-                return (b.relevanceScore || 0) - (a.relevanceScore || 0);
-              }
-              return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-            });
+            dayNotes.slice().sort((a,b)=>{
+              if ((b.relevanceScore||0)!==(a.relevanceScore||0)) return (b.relevanceScore||0)-(a.relevanceScore||0);
+              return new Date(b.createdAt).getTime()-new Date(a.createdAt).getTime();
+            }).forEach(note=>{
+              const card=document.createElement("article");
+              card.className="note";
 
-            sortedDayNotes.forEach(note => {
-              const card = document.createElement("article");
-              card.className = "note";
+              const headerRow=document.createElement("div");
+              headerRow.className="note-header-row";
 
-              const headerRow = document.createElement("div");
-              headerRow.className = "note-header-row";
+              const leftWrap=document.createElement("div");
+              leftWrap.className="note-meta-wrap";
 
-              const leftWrap = document.createElement("div");
-              leftWrap.className = "note-meta-wrap";
+              const meta=document.createElement("div");
+              meta.className="note-meta";
+              meta.textContent=formatTime(note.createdAt);
 
-              const meta = document.createElement("div");
-              meta.className = "note-meta";
-              meta.textContent = formatTime(note.createdAt);
-
-              const score = document.createElement("span");
-              score.className = "score-badge";
-              score.textContent = Number.isInteger(note.relevanceScore) ? `R${note.relevanceScore}` : "Unrated";
+              const score=document.createElement("span");
+              score.className="score-badge"+(Number.isInteger(note.relevanceScore)?" rated":"");
+              score.textContent=Number.isInteger(note.relevanceScore)?`R${note.relevanceScore}`:"unrated";
 
               leftWrap.appendChild(meta);
               leftWrap.appendChild(score);
 
-              const delBtn = document.createElement("button");
-              delBtn.className = "danger delete-note-btn";
-              delBtn.type = "button";
-              delBtn.textContent = "Delete";
-              delBtn.addEventListener("click", () => {
-                const ok = confirm("Delete this note? This can’t be undone.");
-                if (!ok) return;
+              const delBtn=document.createElement("button");
+              delBtn.className="delete-note-btn";
+              delBtn.type="button";
+              delBtn.textContent="×";
+              delBtn.title="Delete note";
+              delBtn.addEventListener("click",()=>{
+                if (!confirm("Delete this note? This can't be undone.")) return;
                 deleteNote(note.id);
-                renderReviewBox();
                 renderNotes(document.getElementById("searchInput").value);
                 refreshCounts();
               });
@@ -1512,9 +1060,9 @@
               headerRow.appendChild(leftWrap);
               headerRow.appendChild(delBtn);
 
-              const text = document.createElement("p");
-              text.className = "note-text";
-              text.textContent = note.text;
+              const text=document.createElement("p");
+              text.className="note-text";
+              text.textContent=note.text;
 
               card.appendChild(headerRow);
               card.appendChild(text);
@@ -1530,154 +1078,105 @@
         });
       }
 
-      function setHint(id, msg) {
-        const el = document.getElementById(id);
-        if (el) el.textContent = msg || "";
-      }
-
-      function refreshCounts() {
-        const total = notes.length;
-        const rated = getRatedNotes().length;
-        const unrated = getUnratedNotes().length;
-        setHint("exportHint", total ? `${total} total · ${rated} ranked · ${unrated} unrated` : "No notes yet");
+      function setupCollapsibles() {
+        [
+          ["newNoteHeader","newNoteBody"],
+          ["pastNoteHeader","pastNoteBody"],
+          ["exportHeader","exportBody"]
+        ].forEach(([headerId, bodyId])=>{
+          const header=document.getElementById(headerId);
+          const body=document.getElementById(bodyId);
+          header.addEventListener("click",()=>{
+            const isCollapsed=header.classList.contains("collapsed");
+            if (isCollapsed) {
+              header.classList.remove("collapsed");
+              body.classList.remove("hidden");
+            } else {
+              header.classList.add("collapsed");
+              body.classList.add("hidden");
+            }
+          });
+        });
       }
 
       function setup() {
-        const noteInput = document.getElementById("noteInput");
-        const saveButton = document.getElementById("saveButton");
-        const searchInput = document.getElementById("searchInput");
+        setupCollapsibles();
 
-        const pastNoteInput = document.getElementById("pastNoteInput");
-        const pastNoteTimeInput = document.getElementById("pastNoteTime");
-        const savePastButton = document.getElementById("savePastButton");
+        const noteInput=document.getElementById("noteInput");
+        const saveButton=document.getElementById("saveButton");
+        const searchInput=document.getElementById("searchInput");
+        const pastNoteInput=document.getElementById("pastNoteInput");
+        const pastNoteTimeInput=document.getElementById("pastNoteTime");
+        const savePastButton=document.getElementById("savePastButton");
 
-        const exportRankedPdfBtn = document.getElementById("exportRankedPdfBtn");
-        const exportRankedTxtBtn = document.getElementById("exportRankedTxtBtn");
-        const exportAllBtn = document.getElementById("exportAllBtn");
-        const exportDayInput = document.getElementById("exportDayInput");
-        const exportDayBtn = document.getElementById("exportDayBtn");
-        const exportMonthOnlyInput = document.getElementById("exportMonthOnlyInput");
-        const exportMonthBtn = document.getElementById("exportMonthBtn");
-        const exportMonthInput = document.getElementById("exportMonthInput");
-        const exportWeekSelect = document.getElementById("exportWeekSelect");
-        const exportWeekBtn = document.getElementById("exportWeekBtn");
-
-        const csvInput = document.getElementById("csvInput");
-        const importCsvBtn = document.getElementById("importCsvBtn");
-
-        saveButton.addEventListener("click", () => {
-          const text = noteInput.value.trim();
+        saveButton.addEventListener("click",()=>{
+          const text=noteInput.value.trim();
           if (!text) return;
           createNote(text);
-          noteInput.value = "";
-          renderReviewBox();
+          noteInput.value="";
           renderNotes(searchInput.value);
           refreshCounts();
         });
 
-        noteInput.addEventListener("keydown", event => {
-          if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+        noteInput.addEventListener("keydown",event=>{
+          if ((event.ctrlKey||event.metaKey)&&event.key==="Enter") {
             event.preventDefault();
             saveButton.click();
           }
         });
 
-        savePastButton.addEventListener("click", () => {
-          const text = pastNoteInput.value.trim();
-          const timestamp = (pastNoteTimeInput.value || "").trim();
+        savePastButton.addEventListener("click",()=>{
+          const text=pastNoteInput.value.trim();
+          const timestamp=(pastNoteTimeInput.value||"").trim();
           if (!text) return;
-          if (!timestamp) {
-            alert("Set a timestamp for the past note.");
-            return;
-          }
-
-          createNote(text, timestamp);
-          pastNoteInput.value = "";
-          pastNoteTimeInput.value = "";
-          renderReviewBox();
+          if (!timestamp) { alert("Set a timestamp for the past note."); return; }
+          createNote(text,timestamp);
+          pastNoteInput.value="";
+          pastNoteTimeInput.value="";
           renderNotes(searchInput.value);
           refreshCounts();
         });
 
-        searchInput.addEventListener("input", () => {
+        searchInput.addEventListener("input",()=>{
           renderNotes(searchInput.value);
         });
 
-        exportRankedPdfBtn.addEventListener("click", () => {
-          const res = exportRankedPdf();
-          if (!res.ok) alert(res.msg);
+        document.getElementById("exportRankedTxtBtn").addEventListener("click",()=>{
+          const res=exportRankedTxt();
+          if (!res.ok) showToast(res.msg);
         });
 
-        exportRankedTxtBtn.addEventListener("click", () => {
-          const res = exportRankedTxt();
-          if (!res.ok) alert(res.msg);
+        document.getElementById("exportAllBtn").addEventListener("click",()=>{
+          const res=exportAllTxt();
+          if (!res.ok) showToast(res.msg);
         });
 
-        exportAllBtn.addEventListener("click", () => {
-          const res = exportAllTxt();
-          if (!res.ok) alert(res.msg);
+        document.getElementById("exportMonthBtn").addEventListener("click",()=>{
+          const ym=(document.getElementById("exportMonthOnlyInput").value||"").trim();
+          if (!ym) { showToast("Choose a month first."); return; }
+          const res=exportMonthTxt(ym);
+          if (!res.ok) showToast(res.msg);
         });
 
-        exportDayBtn.addEventListener("click", () => {
-          const val = (exportDayInput.value || "").trim();
-          if (!val) {
-            alert("Choose a day first.");
-            return;
-          }
-          const res = exportDayTxt(val);
-          if (!res.ok) alert(res.msg);
-        });
-
-        exportMonthBtn.addEventListener("click", () => {
-          const ym = (exportMonthOnlyInput.value || "").trim();
-          if (!ym) {
-            alert("Choose a month first.");
-            return;
-          }
-          const res = exportMonthTxt(ym);
-          if (!res.ok) alert(res.msg);
-        });
-
-        exportWeekBtn.addEventListener("click", () => {
-          const ym = (exportMonthInput.value || "").trim();
-          const w = (exportWeekSelect.value || "1").trim();
-          if (!ym) {
-            alert("Choose a month first.");
-            return;
-          }
-          const res = exportWeekTxt(ym, w);
-          if (!res.ok) alert(res.msg);
-        });
-
-        importCsvBtn.addEventListener("click", async () => {
-          const file = csvInput.files && csvInput.files[0];
-          if (!file) {
-            alert("Choose a CSV file first.");
-            return;
-          }
-
-          setHint("importHint", "Importing…");
+        document.getElementById("importCsvBtn").addEventListener("click",async()=>{
+          const file=document.getElementById("csvInput").files?.[0];
+          if (!file) { showToast("Choose a CSV file first."); return; }
+          setHint("importHint","Importing…");
           try {
-            const res = await importCsvFile(file);
-            if (!res.ok) {
-              setHint("importHint", "");
-              alert(res.msg || "Import failed.");
-              return;
-            }
-            renderReviewBox();
+            const res=await importCsvFile(file);
+            if (!res.ok) { setHint("importHint",""); showToast(res.msg||"Import failed."); return; }
             renderNotes(searchInput.value);
             refreshCounts();
-            setHint("importHint", `Imported ${res.imported}. Skipped ${res.skipped}.`);
-          } catch (e) {
+            setHint("importHint",`Imported ${res.imported}. Skipped ${res.skipped}.`);
+          } catch(e) {
             console.error(e);
-            setHint("importHint", "");
-            alert("Import failed. Open DevTools → Console for details.");
+            setHint("importHint","");
+            showToast("Import failed. Open DevTools → Console for details.");
           }
         });
 
         loadNotes();
         saveNotes();
-        renderReviewBox();
         renderNotes();
         refreshCounts();
       }
