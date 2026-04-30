@@ -989,7 +989,7 @@
             lines.push(`— ${getDayLabelFromKey(dayKey)} —`);
             const dayNotes = structure[monthKey][dayKey].slice().sort((a,b) => new Date(b.createdAt)-new Date(a.createdAt));
             dayNotes.forEach(note => {
-              lines.push(`[${formatTime(note.createdAt)}] ${note.text}`);
+              lines.push(note.text);
               lines.push("");
             });
           });
@@ -1024,7 +1024,7 @@
         Object.keys(byDay).sort((a,b) => a.localeCompare(b)).forEach(dayKey => {
           lines.push(`— ${getDayLabelFromKey(dayKey)} —`);
           byDay[dayKey].slice().sort((a,b) => new Date(a.createdAt)-new Date(b.createdAt)).forEach(note => {
-            lines.push(`[${formatTime(note.createdAt)}] ${note.text}`);
+            lines.push(note.text);
             lines.push("");
           });
           lines.push("");
