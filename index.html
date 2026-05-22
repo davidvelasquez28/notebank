@@ -74,6 +74,21 @@
       margin-right: auto;
     }
 
+    .btn-slideshow {
+      background: var(--accent);
+      color: #0e0e10;
+      border: none;
+      font-family: 'Instrument Serif', serif;
+      font-size: 1rem;
+      font-weight: 500;
+      padding: 7px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+    .btn-slideshow:hover { opacity: 0.85; }
+    .btn-slideshow:active { transform: scale(0.97); }
+
     .layout {
       position: relative;
       z-index: 1;
@@ -645,9 +660,124 @@
 
     .error-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+    /* ——— Slideshow ——— */
+    .slideshow-overlay {
+      position: fixed;
+      inset: 0;
+      background: #0e0e10;
+      z-index: 9999;
+      display: none;
+      flex-direction: column;
+      padding: 32px 40px;
+    }
+    .slideshow-overlay.active { display: flex; }
+
+    .slideshow-topbar {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .slideshow-topbar label {
+      font-size: 0.85rem;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .slideshow-topbar select,
+    .slideshow-topbar input[type="number"] {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: 'Instrument Serif', serif;
+      font-size: 0.95rem;
+      padding: 6px 10px;
+      border-radius: 6px;
+      outline: none;
+    }
+
+    .slideshow-topbar input[type="number"] { width: 70px; }
+
+    .slideshow-pause-btn,
+    .slideshow-close-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: 'Instrument Serif', serif;
+      font-size: 0.95rem;
+      padding: 6px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .slideshow-pause-btn:hover,
+    .slideshow-close-btn:hover { border-color: var(--accent2); }
+
+    .slideshow-close-btn { margin-left: auto; }
+
+    .slideshow-stage {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      overflow: hidden;
+    }
+
+    .slideshow-card {
+      max-width: 900px;
+      width: 100%;
+      text-align: center;
+      font-family: 'Fraunces', serif;
+      line-height: 1.5;
+      color: var(--text);
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      opacity: 0;
+      transition: opacity 0.4s;
+    }
+    .slideshow-card.visible { opacity: 1; }
+
+    .slideshow-meta {
+      font-family: 'Instrument Serif', serif;
+      font-size: 0.9rem;
+      color: var(--muted);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+
+    .slideshow-footer {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 16px;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    .slideshow-progress {
+      flex: 1;
+      max-width: 400px;
+      height: 3px;
+      background: var(--surface2);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .slideshow-progress-bar {
+      height: 100%;
+      background: var(--accent);
+      width: 0%;
+      transition: width 0.1s linear;
+    }
+
     @media (max-width: 700px) {
       .layout { flex-direction: column; height: auto; }
       .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border); }
+      .slideshow-overlay { padding: 20px; }
     }
   </style>
 </head>
@@ -656,6 +786,7 @@
   <div class="topbar">
     <h1>Slipbox</h1>
     <span class="topbar-sub">a minimal inbox for your notes</span>
+    <button class="btn-slideshow" id="slideshowBtn">▶ Slideshow</button>
     <span class="hint-text">stored locally · no account</span>
   </div>
 
@@ -747,6 +878,29 @@
       </div>
     </div>
 
+  </div>
+
+  <div class="slideshow-overlay" id="slideshowOverlay">
+    <div class="slideshow-topbar">
+      <label>Filter:</label>
+      <select id="slideshowFilter">
+        <option value="all">All notes</option>
+      </select>
+      <label>Seconds:</label>
+      <input type="number" id="slideshowSpeed" min="2" max="60" value="6" />
+      <button class="slideshow-pause-btn" id="slideshowPauseBtn">⏸ Pause</button>
+      <button class="slideshow-close-btn" id="slideshowCloseBtn">✕ Close</button>
+    </div>
+    <div class="slideshow-stage">
+      <div class="slideshow-card" id="slideshowCard">
+        <div class="slideshow-meta" id="slideshowMeta"></div>
+        <div id="slideshowText"></div>
+      </div>
+    </div>
+    <div class="slideshow-footer">
+      <span id="slideshowCounter">0 of 0</span>
+      <div class="slideshow-progress"><div class="slideshow-progress-bar" id="slideshowProgress"></div></div>
+    </div>
   </div>
 
   <div class="error-toast" id="errorToast"></div>
@@ -1363,8 +1517,189 @@
         });
       }
 
+      // ——— Slideshow ———
+      let slideshowState = {
+        active: false,
+        paused: false,
+        queue: [],
+        index: 0,
+        timer: null,
+        progressTimer: null,
+        startTime: 0,
+        duration: 6000
+      };
+
+      function shuffleArray(arr) {
+        const a = arr.slice();
+        for (let i = a.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [a[i], a[j]] = [a[j], a[i]];
+        }
+        return a;
+      }
+
+      function getSlideshowMonthKeys() {
+        const keys = new Set();
+        notes.forEach(n => {
+          const d = new Date(n.createdAt);
+          if (!isNaN(d.getTime())) {
+            keys.add(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`);
+          }
+        });
+        return Array.from(keys).sort((a,b) => b.localeCompare(a));
+      }
+
+      function populateSlideshowFilter() {
+        const sel = document.getElementById("slideshowFilter");
+        const current = sel.value || "all";
+        sel.innerHTML = `<option value="all">All notes</option>`;
+        getSlideshowMonthKeys().forEach(key => {
+          const opt = document.createElement("option");
+          opt.value = `month:${key}`;
+          opt.textContent = getMonthLabelFromKey(key);
+          sel.appendChild(opt);
+        });
+        sel.value = Array.from(sel.options).some(o => o.value === current) ? current : "all";
+      }
+
+      function buildSlideshowQueue(filterValue) {
+        let pool = notes.slice();
+        if (filterValue && filterValue.startsWith("month:")) {
+          const key = filterValue.slice(6);
+          pool = pool.filter(n => {
+            const d = new Date(n.createdAt);
+            if (isNaN(d.getTime())) return false;
+            return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}` === key;
+          });
+        }
+        return shuffleArray(pool);
+      }
+
+      function fitSlideshowText(textEl, text) {
+        textEl.textContent = text;
+        const len = text.length;
+        let size;
+        if (len < 80) size = "2.8rem";
+        else if (len < 200) size = "2.2rem";
+        else if (len < 500) size = "1.6rem";
+        else size = "1.2rem";
+        textEl.style.fontSize = size;
+      }
+
+      function renderCurrentSlide() {
+        const card = document.getElementById("slideshowCard");
+        const meta = document.getElementById("slideshowMeta");
+        const text = document.getElementById("slideshowText");
+        const counter = document.getElementById("slideshowCounter");
+
+        const note = slideshowState.queue[slideshowState.index];
+        if (!note) return;
+
+        card.classList.remove("visible");
+        setTimeout(() => {
+          meta.textContent = formatDateTime(note.createdAt);
+          fitSlideshowText(text, note.text);
+          counter.textContent = `${slideshowState.index + 1} of ${slideshowState.queue.length}`;
+          card.classList.add("visible");
+        }, 200);
+      }
+
+      function advanceSlide() {
+        slideshowState.index++;
+        if (slideshowState.index >= slideshowState.queue.length) {
+          // Reshuffle and start over — every note shows once before any repeat
+          const filter = document.getElementById("slideshowFilter").value;
+          slideshowState.queue = buildSlideshowQueue(filter);
+          slideshowState.index = 0;
+        }
+        renderCurrentSlide();
+        startSlideTimer();
+      }
+
+      function startSlideTimer() {
+        clearTimeout(slideshowState.timer);
+        clearInterval(slideshowState.progressTimer);
+        if (slideshowState.paused) return;
+
+        slideshowState.startTime = Date.now();
+        slideshowState.timer = setTimeout(advanceSlide, slideshowState.duration);
+
+        const bar = document.getElementById("slideshowProgress");
+        bar.style.width = "0%";
+        slideshowState.progressTimer = setInterval(() => {
+          const elapsed = Date.now() - slideshowState.startTime;
+          const pct = Math.min(100, (elapsed / slideshowState.duration) * 100);
+          bar.style.width = pct + "%";
+        }, 80);
+      }
+
+      function openSlideshow() {
+        if (!notes.length) { showToast("No notes to show."); return; }
+        populateSlideshowFilter();
+        const filter = document.getElementById("slideshowFilter").value;
+        const speed = parseInt(document.getElementById("slideshowSpeed").value, 10) || 6;
+        slideshowState.duration = Math.max(2, speed) * 1000;
+        slideshowState.queue = buildSlideshowQueue(filter);
+        if (!slideshowState.queue.length) { showToast("No notes for that filter."); return; }
+        slideshowState.index = 0;
+        slideshowState.paused = false;
+        slideshowState.active = true;
+        document.getElementById("slideshowOverlay").classList.add("active");
+        document.getElementById("slideshowPauseBtn").textContent = "⏸ Pause";
+        renderCurrentSlide();
+        startSlideTimer();
+      }
+
+      function closeSlideshow() {
+        slideshowState.active = false;
+        clearTimeout(slideshowState.timer);
+        clearInterval(slideshowState.progressTimer);
+        document.getElementById("slideshowOverlay").classList.remove("active");
+      }
+
+      function togglePauseSlideshow() {
+        slideshowState.paused = !slideshowState.paused;
+        document.getElementById("slideshowPauseBtn").textContent = slideshowState.paused ? "▶ Play" : "⏸ Pause";
+        if (slideshowState.paused) {
+          clearTimeout(slideshowState.timer);
+          clearInterval(slideshowState.progressTimer);
+        } else {
+          startSlideTimer();
+        }
+      }
+
+      function setupSlideshow() {
+        document.getElementById("slideshowBtn").addEventListener("click", openSlideshow);
+        document.getElementById("slideshowCloseBtn").addEventListener("click", closeSlideshow);
+        document.getElementById("slideshowPauseBtn").addEventListener("click", togglePauseSlideshow);
+
+        document.getElementById("slideshowFilter").addEventListener("change", () => {
+          if (!slideshowState.active) return;
+          const filter = document.getElementById("slideshowFilter").value;
+          slideshowState.queue = buildSlideshowQueue(filter);
+          slideshowState.index = 0;
+          if (!slideshowState.queue.length) { showToast("No notes for that filter."); closeSlideshow(); return; }
+          renderCurrentSlide();
+          startSlideTimer();
+        });
+
+        document.getElementById("slideshowSpeed").addEventListener("change", () => {
+          const speed = parseInt(document.getElementById("slideshowSpeed").value, 10) || 6;
+          slideshowState.duration = Math.max(2, speed) * 1000;
+          if (slideshowState.active && !slideshowState.paused) startSlideTimer();
+        });
+
+        document.addEventListener("keydown", (e) => {
+          if (!slideshowState.active) return;
+          if (e.key === "Escape") closeSlideshow();
+          else if (e.key === " " || e.key === "Spacebar") { e.preventDefault(); togglePauseSlideshow(); }
+          else if (e.key === "ArrowRight") { clearTimeout(slideshowState.timer); advanceSlide(); }
+        });
+      }
+
       function setup() {
         setupCollapsibles();
+        setupSlideshow();
 
         const noteInput=document.getElementById("noteInput");
         const saveButton=document.getElementById("saveButton");
