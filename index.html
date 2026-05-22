@@ -734,7 +734,7 @@
       max-height: 100%;
       text-align: center;
       font-family: 'Fraunces', serif;
-      line-height: 1.15;
+      line-height: 1.25;
       color: var(--text);
       white-space: pre-wrap;
       word-wrap: break-word;
@@ -786,6 +786,102 @@
       transition: width 0.1s linear;
     }
 
+    /* ——— Small modals (custom text + note picker) ——— */
+    .mini-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      z-index: 9998;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .mini-modal-backdrop.active { display: flex; }
+
+    .mini-modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      width: 100%;
+      max-width: 560px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .mini-modal h2 {
+      font-family: 'Fraunces', serif;
+      font-size: 1.3rem;
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .mini-modal textarea,
+    .mini-modal input[type="text"] {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: 'Instrument Serif', serif;
+      font-size: 1rem;
+      padding: 10px 12px;
+      border-radius: 6px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .mini-modal textarea { min-height: 120px; resize: vertical; line-height: 1.5; }
+    .mini-modal textarea:focus,
+    .mini-modal input[type="text"]:focus { border-color: var(--accent2); }
+
+    .mini-modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    .mini-modal-list {
+      max-height: 340px;
+      overflow-y: auto;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--surface2);
+    }
+    .mini-modal-list::-webkit-scrollbar { width: 4px; }
+    .mini-modal-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    .picker-row {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+    .picker-row:last-child { border-bottom: none; }
+    .picker-row:hover { background: rgba(106,242,176,0.08); }
+
+    .picker-row-meta {
+      font-size: 0.8rem;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .picker-row-text {
+      font-size: 0.98rem;
+      color: var(--text);
+      line-height: 1.4;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .picker-empty {
+      padding: 20px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
     @media (max-width: 700px) {
       .layout { flex-direction: column; height: auto; }
       .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border); }
@@ -799,6 +895,8 @@
     <h1>Slipbox</h1>
     <span class="topbar-sub">a minimal inbox for your notes</span>
     <button class="btn-slideshow" id="slideshowBtn">▶ Slideshow</button>
+    <button class="btn-slideshow" id="customDisplayBtn">✎ Custom</button>
+    <button class="btn-slideshow" id="pickNoteBtn">⌕ Pick note</button>
     <span class="hint-text">stored locally · no account</span>
   </div>
 
@@ -890,6 +988,28 @@
       </div>
     </div>
 
+  </div>
+
+  <div class="mini-modal-backdrop" id="customModal">
+    <div class="mini-modal">
+      <h2>Custom display</h2>
+      <textarea id="customText" placeholder="Type anything you want to display fullscreen…"></textarea>
+      <div class="mini-modal-actions">
+        <button class="slideshow-close-btn" id="customCancelBtn">Cancel</button>
+        <button class="btn-primary" style="width:auto;" id="customShowBtn">Show fullscreen</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="mini-modal-backdrop" id="pickerModal">
+    <div class="mini-modal">
+      <h2>Pick a note</h2>
+      <input type="text" id="pickerSearch" placeholder="Search your notes…" />
+      <div class="mini-modal-list" id="pickerList"></div>
+      <div class="mini-modal-actions">
+        <button class="slideshow-close-btn" id="pickerCancelBtn">Cancel</button>
+      </div>
+    </div>
   </div>
 
   <div class="slideshow-overlay" id="slideshowOverlay">
@@ -1601,7 +1721,7 @@
 
         // Binary search for the largest font size that still fits
         let lo = 16;       // 1rem floor
-        let hi = 400;      // huge ceiling for short notes
+        let hi = 1200;     // huge ceiling — short notes can get enormous
         let best = lo;
 
         textEl.style.fontSize = lo + "px";
@@ -1692,6 +1812,7 @@
         clearTimeout(slideshowState.timer);
         clearInterval(slideshowState.progressTimer);
         document.getElementById("slideshowOverlay").classList.remove("active");
+        restoreSlideshowChrome();
       }
 
       function togglePauseSlideshow() {
@@ -1735,15 +1856,161 @@
 
         window.addEventListener("resize", () => {
           if (!slideshowState.active) return;
-          const note = slideshowState.queue[slideshowState.index];
-          if (!note) return;
-          fitSlideshowText(document.getElementById("slideshowText"), note.text);
+          const textEl = document.getElementById("slideshowText");
+          fitSlideshowText(textEl, textEl.textContent || "");
+        });
+      }
+
+      // ——— Static fullscreen display (custom text or single picked note) ———
+      function showStaticFullscreen(text, metaLabel) {
+        if (!text || !text.trim()) { showToast("Nothing to display."); return; }
+
+        // Hide slideshow-specific chrome
+        document.querySelector(".slideshow-topbar").style.justifyContent = "flex-end";
+        document.querySelectorAll(".slideshow-topbar > label, " +
+                                  ".slideshow-topbar > select, " +
+                                  ".slideshow-topbar > input, " +
+                                  ".slideshow-topbar > .slideshow-pause-btn")
+          .forEach(el => el.style.display = "none");
+        document.querySelector(".slideshow-footer").style.display = "none";
+
+        slideshowState.active = true;
+        slideshowState.paused = true; // no auto-advance
+        slideshowState.queue = [];
+        clearTimeout(slideshowState.timer);
+        clearInterval(slideshowState.progressTimer);
+
+        document.getElementById("slideshowOverlay").classList.add("active");
+
+        const card = document.getElementById("slideshowCard");
+        const meta = document.getElementById("slideshowMeta");
+        const textEl = document.getElementById("slideshowText");
+
+        card.classList.remove("visible");
+        setTimeout(() => {
+          meta.textContent = metaLabel || "";
+          meta.style.display = metaLabel ? "" : "none";
+          fitSlideshowText(textEl, text);
+          card.classList.add("visible");
+        }, 50);
+      }
+
+      // Restore slideshow chrome when closing (called from closeSlideshow)
+      function restoreSlideshowChrome() {
+        document.querySelector(".slideshow-topbar").style.justifyContent = "";
+        document.querySelectorAll(".slideshow-topbar > label, " +
+                                  ".slideshow-topbar > select, " +
+                                  ".slideshow-topbar > input, " +
+                                  ".slideshow-topbar > .slideshow-pause-btn")
+          .forEach(el => el.style.display = "");
+        document.querySelector(".slideshow-footer").style.display = "";
+        document.getElementById("slideshowMeta").style.display = "";
+      }
+
+      // ——— Custom text modal ———
+      function setupCustomModal() {
+        const modal = document.getElementById("customModal");
+        const textInput = document.getElementById("customText");
+        const showBtn = document.getElementById("customShowBtn");
+        const cancelBtn = document.getElementById("customCancelBtn");
+
+        document.getElementById("customDisplayBtn").addEventListener("click", () => {
+          textInput.value = "";
+          modal.classList.add("active");
+          setTimeout(() => textInput.focus(), 50);
+        });
+
+        cancelBtn.addEventListener("click", () => modal.classList.remove("active"));
+
+        showBtn.addEventListener("click", () => {
+          const txt = textInput.value.trim();
+          if (!txt) { showToast("Type something first."); return; }
+          modal.classList.remove("active");
+          showStaticFullscreen(txt, null);
+        });
+
+        textInput.addEventListener("keydown", (e) => {
+          if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+            e.preventDefault();
+            showBtn.click();
+          }
+          if (e.key === "Escape") modal.classList.remove("active");
+        });
+
+        modal.addEventListener("click", (e) => {
+          if (e.target === modal) modal.classList.remove("active");
+        });
+      }
+
+      // ——— Note picker modal ———
+      function renderPickerList(query) {
+        const listEl = document.getElementById("pickerList");
+        listEl.innerHTML = "";
+        const q = (query || "").toLowerCase().trim();
+        const filtered = q ? notes.filter(n => (n.text || "").toLowerCase().includes(q)) : notes;
+
+        if (!filtered.length) {
+          const empty = document.createElement("div");
+          empty.className = "picker-empty";
+          empty.textContent = q ? "No notes match." : "No notes yet.";
+          listEl.appendChild(empty);
+          return;
+        }
+
+        filtered.slice(0, 200).forEach(note => {
+          const row = document.createElement("div");
+          row.className = "picker-row";
+
+          const meta = document.createElement("div");
+          meta.className = "picker-row-meta";
+          meta.textContent = formatDateTime(note.createdAt);
+
+          const text = document.createElement("div");
+          text.className = "picker-row-text";
+          text.textContent = note.text;
+
+          row.appendChild(meta);
+          row.appendChild(text);
+
+          row.addEventListener("click", () => {
+            document.getElementById("pickerModal").classList.remove("active");
+            showStaticFullscreen(note.text, formatDateTime(note.createdAt));
+          });
+
+          listEl.appendChild(row);
+        });
+      }
+
+      function setupPickerModal() {
+        const modal = document.getElementById("pickerModal");
+        const searchInput = document.getElementById("pickerSearch");
+        const cancelBtn = document.getElementById("pickerCancelBtn");
+
+        document.getElementById("pickNoteBtn").addEventListener("click", () => {
+          if (!notes.length) { showToast("No notes yet."); return; }
+          searchInput.value = "";
+          renderPickerList("");
+          modal.classList.add("active");
+          setTimeout(() => searchInput.focus(), 50);
+        });
+
+        cancelBtn.addEventListener("click", () => modal.classList.remove("active"));
+
+        searchInput.addEventListener("input", () => renderPickerList(searchInput.value));
+        searchInput.addEventListener("keydown", (e) => {
+          if (e.key === "Escape") modal.classList.remove("active");
+        });
+
+        modal.addEventListener("click", (e) => {
+          if (e.target === modal) modal.classList.remove("active");
         });
       }
 
       function setup() {
         setupCollapsibles();
         setupSlideshow();
+        setupCustomModal();
+        setupPickerModal();
 
         const noteInput=document.getElementById("noteInput");
         const saveButton=document.getElementById("saveButton");
