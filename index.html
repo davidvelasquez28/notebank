@@ -725,19 +725,25 @@
       justify-content: center;
       padding: 20px;
       overflow: hidden;
+      min-height: 0;
     }
 
     .slideshow-card {
-      max-width: 900px;
+      max-width: 95vw;
       width: 100%;
+      max-height: 100%;
       text-align: center;
       font-family: 'Fraunces', serif;
-      line-height: 1.5;
+      line-height: 1.15;
       color: var(--text);
       white-space: pre-wrap;
       word-wrap: break-word;
       opacity: 0;
       transition: opacity 0.4s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
     }
     .slideshow-card.visible { opacity: 1; }
 
@@ -748,6 +754,12 @@
       letter-spacing: 0.14em;
       text-transform: uppercase;
       margin-bottom: 24px;
+      flex-shrink: 0;
+    }
+
+    #slideshowText {
+      width: 100%;
+      font-weight: 700;
     }
 
     .slideshow-footer {
@@ -1577,13 +1589,38 @@
 
       function fitSlideshowText(textEl, text) {
         textEl.textContent = text;
-        const len = text.length;
-        let size;
-        if (len < 80) size = "2.8rem";
-        else if (len < 200) size = "2.2rem";
-        else if (len < 500) size = "1.6rem";
-        else size = "1.2rem";
-        textEl.style.fontSize = size;
+        const stage = document.querySelector(".slideshow-stage");
+        const meta = document.getElementById("slideshowMeta");
+        if (!stage) return;
+
+        // Available space inside the stage, minus the meta line above the text
+        const availW = stage.clientWidth - 40;
+        const metaH = meta ? meta.offsetHeight + 24 : 0;
+        const availH = stage.clientHeight - metaH - 20;
+        if (availW <= 0 || availH <= 0) return;
+
+        // Binary search for the largest font size that still fits
+        let lo = 16;       // 1rem floor
+        let hi = 400;      // huge ceiling for short notes
+        let best = lo;
+
+        textEl.style.fontSize = lo + "px";
+
+        while (lo <= hi) {
+          const mid = Math.floor((lo + hi) / 2);
+          textEl.style.fontSize = mid + "px";
+          // scrollWidth/Height reflect actual rendered size including wrapping
+          const fitsW = textEl.scrollWidth <= availW;
+          const fitsH = textEl.scrollHeight <= availH;
+          if (fitsW && fitsH) {
+            best = mid;
+            lo = mid + 1;
+          } else {
+            hi = mid - 1;
+          }
+        }
+
+        textEl.style.fontSize = best + "px";
       }
 
       function renderCurrentSlide() {
@@ -1694,6 +1731,13 @@
           if (e.key === "Escape") closeSlideshow();
           else if (e.key === " " || e.key === "Spacebar") { e.preventDefault(); togglePauseSlideshow(); }
           else if (e.key === "ArrowRight") { clearTimeout(slideshowState.timer); advanceSlide(); }
+        });
+
+        window.addEventListener("resize", () => {
+          if (!slideshowState.active) return;
+          const note = slideshowState.queue[slideshowState.index];
+          if (!note) return;
+          fitSlideshowText(document.getElementById("slideshowText"), note.text);
         });
       }
 
